@@ -1,82 +1,77 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/02/03 16:02:00 by tlucanti          #+#    #+#             */
+/*   Updated: 2022/02/03 16:02:05 by tlucanti         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include <iostream>
-#include <stdexcept>
-#include <string>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
-namespace tlucanti
-{
-    class Color
-    {
-        static const char *r;
-    };
+#include "Socket.hpp"
+#include <poll.h>
 
-    class SocketException : public std::exception
-    {
-    public:
-        SocketException(const std::string &message, int error)
-        {
-            _message = "[r][FAIL][w] socket:[] " + message + ": [y]" + ft_strerror(error) + "[]";
-        }
-        const std::string &what() { return _message; }
-    private:
-        const char *ft_strerror(int errnum) {
-            switch (errnum)
-            {
-                case 0: return "";
-                default: return strerror(errnum);
-            }
-        }
-        std::string _message;
-    };
+#define CLI_NUM 10
+int do_poll(tlucanti::Socket cli[CLI_NUM]);
 
-    class Socket
-    {
-    public:
-        Socket(const std::string &address, int port)
-        {
-            struct sockaddr_in _addr = {};
-
-            _sock = socket(AF_INET, SOCK_STREAM, 0);
-            if (_sock == -1)
-                throw SocketException("cannot create socket", errno);
-            _addr.sin_family = AF_INET;
-            _addr.sin_addr.s_addr = inet_addr(address.c_str());
-            _addr.sin_port = htons(port);
-            if (bind(_sock, reinterpret_cast<const sockaddr *>(&_addr), sizeof(_addr)))
-                throw SocketException("cannot bind address", errno);
-            if (listen(_sock, 10))
-                throw SocketException("cannot listen port", errno);
-        }
-        Socket &operator =(const Socket &cpy)
-        {
-            _sock = cpy._sock;
-            return *this;
-        }
-
-        Socket(int sock) : _sock(sock) {}
-
-        [[nodiscard]] int get_sock() const { return _sock; }
-    private:
-        int _sock;
-    };
-
-    Socket accept(const Socket &_sock)
-    {
-        int int_sock = ::accept(_sock.get_sock(), nullptr, nullptr);
-        if (int_sock < 0)
-            throw SocketException("cannot accept socket", errno);
-        return Socket(int_sock);
-    }
-}
+const int tlucanti::Socket::READ_SIZE = 64;
 
 int main()
 {
-    tlucanti::Socket sock("0.0.0.0", 8080);
-    while (true)
-    {
-        tlucanti::Socket = tlucanti::accept(sock);
-    }
+	tlucanti::Socket clients[CLI_NUM];
+	do_poll();
+}
+
+int do_poll(tlucanti::Socket cli[CLI_NUM])
+{
+	struct pollfd clients[CLI_NUM];
+
+	for (int i=0; i < CLI_NUM; ++i)
+	{
+		clients[i].fd = cli[i].get_sock();
+		clients[i].events = POLLIN; // POLLOUT
+	}
+
+	int status;
+	while (true)
+	{
+		status = ::poll(reinterpret_cast<pollfd *>(&clients), CLI_NUM, 500);
+		if (status == 0)
+			continue ;
+		else if (status < 0)
+			throw std::runtime_error("poll error"); // change to normal exception
+		else
+		{
+			for (int i=0; i < CLI_NUM; ++i)
+			{
+				if (clients[i].events == POLLIN)
+				{
+					clients[i].events = 0;
+					std::cout << "data from client :<" << tlucanti::recv(cli[i]) << ">\n";
+				}
+			}
+		}
+	}
+}
+
+int _backend()
+{
+	tlucanti::Socket sock("0.0.0.0", 8080);
+	while (true)
+	{
+		try
+		{
+			tlucanti::Socket client = tlucanti::accept(sock);
+			std::string content = tlucanti::recv(client);
+		}
+		catch (std::exception &exc)
+		{
+			std::cout << exc.what() << std::endl;
+			return 0;
+		}
+	}
 }
