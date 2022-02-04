@@ -12,31 +12,39 @@
 
 #include "Socket.hpp"
 
-tlucanti::Socket tlucanti::Socket::nil = tlucanti::Socket(-1);
+tlucanti::Socket tlucanti::Socket::nil = tlucanti::Socket(-1, false);
 
-tlucanti::Socket::Socket(const std::string &address, uint16_t port)
+tlucanti::Socket::Socket(const std::string &address, uint16_t port, bool nonblock)
 {
 	struct sockaddr_in _addr = {};
 
 	_sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (_sock == -1)
 		throw SocketException("cannot create socket", errno);
-	_addr.sin_family = AF_INET;
-	_addr.sin_addr.s_addr = inet_addr(address.c_str());
+	if (nonblock)
+		fcntl(_sock, F_SETFL, O_NONBLOCK);
+	if (inet_pton(AF_INET, address.c_str(), &_addr.sin_addr) <= 0)
+		throw SocketException("invalid socket address", errno);
 	_addr.sin_port = htons(port);
 	if (bind(_sock, reinterpret_cast<const sockaddr *>(&_addr), sizeof(_addr)))
 		throw SocketException("cannot bind address", errno);
-	if (listen(_sock, 10))
+	if (listen(_sock, 20))
 		throw SocketException("cannot listen port", errno);
 }
 
+#include <iostream>
 tlucanti::Socket::~Socket() noexcept
 {
-	close(_sock);
+//	std::cout << "closed " << _sock << "\n";
+//	close(_sock);
 }
 
-tlucanti::Socket::Socket(int sock) noexcept
-		: _sock(sock) {}
+tlucanti::Socket::Socket(int sock, bool nonblock) noexcept
+		: _sock(sock)
+{
+	if (nonblock)
+		fcntl(_sock, F_SETFL, O_NONBLOCK);
+}
 
 tlucanti::Socket &
 tlucanti::Socket::operator =(const Socket &cpy)

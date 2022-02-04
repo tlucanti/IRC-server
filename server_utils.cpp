@@ -20,13 +20,15 @@ namespace tlucanti
 		while (true)
 		{
 			Socket new_cli = server.accept();
-			if (new_cli != Socket::nil)
+			if (new_cli != Socket::nil) {
+				std::cout << "add new client " << new_cli.get_sock() << std::endl;
 				server.add_client(new_cli);
+			}
 			Socket client = server.poll();
 			if (client == Socket::nil)
 				continue;
 			std::string cli_data = tlucanti::recv(client);
-			std::cout << "data from client: <" << cli_data << ">\n";
+			std::cout << "data from client " << client.get_sock() << " (" << cli_data.size() << "): <" << cli_data << ">\n";
 		}
 	}
 }

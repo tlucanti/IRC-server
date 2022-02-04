@@ -17,6 +17,7 @@
 #include <cerrno>
 #include <cstring>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "defs.h"
 #include "SocketException.hpp"
@@ -29,8 +30,8 @@ namespace tlucanti
 	class Socket
 	{
 	public:
-		Socket(const std::string &address, uint16_t port);
-		Socket(int sock) noexcept;
+		Socket(const std::string &address, uint16_t port, bool nonblock);
+		Socket(int sock, bool nonblock) noexcept;
 		~Socket() noexcept;
 		Socket &operator =(const Socket &cpy);
 
@@ -45,7 +46,7 @@ namespace tlucanti
 		int _sock;
 	};
 
-	__WUR Socket accept(const Socket &_sock);
+	__WUR Socket accept(const Socket &_sock, bool nonblock);
 	__WUR std::string recv(const Socket &_sock);
 }
 

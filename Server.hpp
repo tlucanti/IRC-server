@@ -37,7 +37,6 @@ namespace tlucanti
 
 		static const int WAIT_TIME;
 	private:
-		size_t cli_cnt;
 		container poll_data;
 		Socket sock;
 

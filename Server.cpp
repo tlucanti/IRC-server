@@ -13,7 +13,7 @@
 #include "Server.hpp"
 
 tlucanti::Server::Server(const std::string &address, uint16_t port)
-		: cli_cnt(0), _polls_unprocessed(0), _last_processed_poll(-1), sock(address, port) {}
+		: _polls_unprocessed(0), _last_processed_poll(-1), sock(address, port, true) {}
 
 tlucanti::Server::~Server() noexcept
 {
@@ -24,7 +24,7 @@ tlucanti::Server::~Server() noexcept
 __WUR tlucanti::Socket
 tlucanti::Server::accept()
 {
-	return tlucanti::accept(sock);
+	return tlucanti::accept(sock, true);
 }
 
 __WUR tlucanti::Socket
@@ -36,7 +36,7 @@ tlucanti::Server::poll()
 			else - continue from next client with event
 	 	*/
 	{
-		_polls_unprocessed = ::poll(poll_data.data(), cli_cnt, WAIT_TIME);
+		_polls_unprocessed = ::poll(poll_data.data(), poll_data.size(), WAIT_TIME);
 		if (_polls_unprocessed < 0)
 			throw ServerException("poll error", errno);
 		else if (_polls_unprocessed == 0)
@@ -45,13 +45,13 @@ tlucanti::Server::poll()
 			return Socket::nil;
 		}
 	}
-	for (int cli=_last_processed_poll + 1; cli < cli_cnt; ++cli)
+	for (int cli=_last_processed_poll + 1; cli < poll_data.size(); ++cli)
 	{
-		if (poll_data.at(cli).events & POLLIN)
+		if (poll_data.at(cli).revents & POLLIN)
 		{
-			poll_data[cli].events = 0; // don't need .at because already checked
+			poll_data[cli].revents = 0; // don't need .at because already checked
 			--_polls_unprocessed;
-			return Socket(poll_data[cli].fd);
+			return Socket(poll_data[cli].fd, true);
 		}
 	}
 	_polls_unprocessed = 0;
@@ -65,6 +65,7 @@ tlucanti::Server::add_client(Socket &new_cli)
 	struct pollfd new_struct {};
 	new_struct.fd = new_cli.get_sock();
 	new_struct.events = POLLIN;
+	new_struct.revents = 0;
 	poll_data.push_back(new_struct);
 }
 
