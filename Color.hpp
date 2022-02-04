@@ -6,42 +6,87 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/03 15:33:50 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/03 16:02:04 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/04 16:32:49 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef COLOR_HPP
 # define COLOR_HPP
 
+#include <iostream>
+#include <string>
+
 namespace tlucanti
 {
-    class color
-    {
-    public:
-        static const char *k; // black
-        static const char *r; // red
-        static const char *g; // green
-        static const char *y; // yellow
-        static const char *b; // blue
-        static const char *p; // purple
-        static const char *c; // cyan
-        static const char *w; // white
-        static const char *s; // reset
+	class color
+	{
+	public:
+		static const char *k; // black
+		static const char *r; // red
+		static const char *g; // green
+		static const char *y; // yellow
+		static const char *b; // blue
+		static const char *p; // purple
+		static const char *c; // cyan
+		static const char *w; // white
+		static const char *s; // reset
 
-        static const char *tlucanti;
-    };
+		static const char *tlucanti;
+	};
 
-    const char *color::k  = "\033[1;90m";
-    const char *color::r  = "\033[1;91m";
-    const char *color::g  = "\033[1;92m";
-    const char *color::y  = "\033[1;93m";
-    const char *color::b  = "\033[1;94m";
-    const char *color::p  = "\033[1;95m";
-    const char *color::c  = "\033[1;96m";
-    const char *color::w  = "\033[1;97m";
-    const char *color::s  = "\033[0m";
+	const char *color::k  = "\033[1;90m";
+	const char *color::r  = "\033[1;91m";
+	const char *color::g  = "\033[1;92m";
+	const char *color::y  = "\033[1;93m";
+	const char *color::b  = "\033[1;94m";
+	const char *color::p  = "\033[1;95m";
+	const char *color::c  = "\033[1;96m";
+	const char *color::w  = "\033[1;97m";
+	const char *color::s  = "\033[0m";
 
-    const char *color::tlucanti   = (char *) "\033[19;1;96;21;6m";
+	const char *color::tlucanti   = (char *) "\033[19;1;96;21;6m";
+}
+
+namespace tlucanti
+{
+	std::string replace(const std::string &str, const std::string &from, const std::string &to)
+	{
+		if (from == to)
+			return str;
+		size_t it = str.find(from, 0);
+		std::string ret = str;
+		while (it != std::string::npos)
+		{
+//			ret = str.substr(0, it) + to +
+//				  str.substr(it + from.size(), std::string::npos);
+			ret = ret.replace(it, from.size(), to);
+			it += to.size();
+			it = str.find(from);
+		}
+		return ret;
+	}
+}
+
+const tlucanti::color &operator <<(const tlucanti::color &out, const std::string &message)
+{
+	std::string colored = message;
+	colored = tlucanti::replace(colored, "[k]", tlucanti::color::k);
+	colored = tlucanti::replace(colored, "[r]", tlucanti::color::r);
+	colored = tlucanti::replace(colored, "[g]", tlucanti::color::g);
+	colored = tlucanti::replace(colored, "[y]", tlucanti::color::y);
+	colored = tlucanti::replace(colored, "[b]", tlucanti::color::b);
+	colored = tlucanti::replace(colored, "[p]", tlucanti::color::p);
+	colored = tlucanti::replace(colored, "[c]", tlucanti::color::c);
+	colored = tlucanti::replace(colored, "[w]", tlucanti::color::w);
+	colored = tlucanti::replace(colored, "[]", tlucanti::color::s);
+	std::cout << colored;
+	return out;
+}
+
+const tlucanti::color &operator <<(const tlucanti::color &out, const std::exception &exc)
+{
+	std::string msg = exc.what();
+	return out << msg;
 }
 
 #endif  // COLOR_HPP

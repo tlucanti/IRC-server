@@ -12,7 +12,9 @@
 
 #include "Socket.hpp"
 
-tlucanti::Socket::Socket(const std::string &address, int port)
+tlucanti::Socket tlucanti::Socket::nil = tlucanti::Socket(-1);
+
+tlucanti::Socket::Socket(const std::string &address, uint16_t port)
 {
 	struct sockaddr_in _addr = {};
 
@@ -28,7 +30,12 @@ tlucanti::Socket::Socket(const std::string &address, int port)
 		throw SocketException("cannot listen port", errno);
 }
 
-tlucanti::Socket::Socket(int sock)
+tlucanti::Socket::~Socket() noexcept
+{
+	close(_sock);
+}
+
+tlucanti::Socket::Socket(int sock) noexcept
 		: _sock(sock) {}
 
 tlucanti::Socket &
@@ -36,10 +43,4 @@ tlucanti::Socket::operator =(const Socket &cpy)
 {
 	_sock = cpy._sock;
 	return *this;
-}
-
-__WUR int
-tlucanti::Socket::get_sock() const
-{
-	return _sock;
 }

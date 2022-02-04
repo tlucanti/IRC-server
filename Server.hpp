@@ -14,17 +14,39 @@
 # define SERVER_HPP
 
 #include <string>
-#include <set>
+#include <vector>
+#include <sys/poll.h>
+
+#include "ServerException.hpp"
+#include "Socket.hpp"
+#include "defs.h"
 
 namespace tlucanti
 {
 	class Server
 	{
-		public:
+	public:
+		typedef std::vector<struct pollfd> container;
 
-		private:
-			
+		Server(const std::string &address, uint16_t port);
+		~Server() noexcept;
+
+		__WUR Socket accept();
+		__WUR Socket poll();
+		void add_client(Socket &new_cli);
+
+		static const int WAIT_TIME;
+	private:
+		size_t cli_cnt;
+		container poll_data;
+		Socket sock;
+
+		// Server::poll variables
+		int _polls_unprocessed;
+		int _last_processed_poll;
 	};
+
+	__NORET void server_start(Server &server);
 }
 
-#endif SERVER_HPP
+#endif /* SERVER_HPP */

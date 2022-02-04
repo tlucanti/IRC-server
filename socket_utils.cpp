@@ -14,7 +14,7 @@
 
 namespace tlucanti
 {
-	Socket accept(const Socket &_sock)
+	__WUR Socket accept(const Socket &_sock)
 	{
 		int int_sock = ::accept(_sock.get_sock(), nullptr, nullptr);
 		if (int_sock < 0)
@@ -22,7 +22,7 @@ namespace tlucanti
 		return {int_sock};
 	}
 
-	std::string recv(const Socket &_sock)
+	__WUR std::string recv(const Socket &_sock)
 	{
 		std::string message;
 		char buff[Socket::READ_SIZE];
@@ -35,7 +35,7 @@ namespace tlucanti
 			if (rbytes == Socket::READ_SIZE)
 				message += buff;
 			else if (rbytes < 0)
-				throw std::runtime_error("recv error"); // change to normal exception
+				throw SocketException("recv error", errno);
 			else
 			{
 				message += buff;

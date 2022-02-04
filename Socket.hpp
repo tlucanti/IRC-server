@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
+#include <unistd.h>
 
 #include "defs.h"
 #include "SocketException.hpp"
@@ -28,19 +29,24 @@ namespace tlucanti
 	class Socket
 	{
 	public:
-		Socket(const std::string &address, int port);
+		Socket(const std::string &address, uint16_t port);
+		Socket(int sock) noexcept;
+		~Socket() noexcept;
 		Socket &operator =(const Socket &cpy);
 
-		Socket(int sock);
-
-		__WUR int get_sock() const;
+		__WUR inline int get_sock() const { return _sock; }
 		static const int READ_SIZE;
+
+		__WUR inline bool operator ==(const Socket &eq) const { return _sock == eq._sock; }
+		__WUR inline bool operator !=(const Socket &eq) const { return _sock != eq._sock; }
+
+		static Socket nil;
 	private:
 		int _sock;
 	};
 
-	Socket accept(const Socket &_sock);
-	std::string recv(const Socket &_sock);
+	__WUR Socket accept(const Socket &_sock);
+	__WUR std::string recv(const Socket &_sock);
 }
 
 #endif	// SOCKET_HPP

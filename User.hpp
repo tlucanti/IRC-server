@@ -1,28 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   User.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/02/03 16:02:00 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/03 16:02:05 by tlucanti         ###   ########.fr       */
+/*   Created: 2022/02/04 17:49:10 by tlucanti          #+#    #+#             */
+/*   Updated: 2022/02/04 17:51:32 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
-#include "Color.hpp"
+#ifndef USER_HPP
+# define USER_HPP
 
-const int tlucanti::Socket::READ_SIZE = 64;
-const int tlucanti::Server::WAIT_TIME = 500;
-namespace tlucanti { const tlucanti::color cout; }
+#include <string>
 
-int main()
+namespace tlucanti
 {
-//	try {
-		tlucanti::Server server("0.0.0.0", 8080);
-		tlucanti::server_start(server);
-//	} catch (std::exception &exc) {
-//		tlucanti::cout << exc;
-//	}
+	struct User
+	{
+	public:
+		std::string &name;
+		std::string &
+	};
 }
+
+#endif USER_HPP

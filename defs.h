@@ -15,28 +15,24 @@
 
 # if __cplusplus <= 199711L
 #  define __WUR __attribute__((warn_unused_result))
-#  define noexcept throw()
-#  define override
+#  ifndef noexcept
+#   define noexcept throw()
+#  endif /* noexcept */
+#  ifndef override
+#   define override
+#  endif /* override */
 #  ifndef nullptr
 #   define nullptr NULL
-#  endif
-#  define __CONST const
+#  endif /* nullptr */
 #  define __DEFAULT {}
-#  define __DEFAULT_ASSIGN {return *this;}
-#  define __DEFINE
-#  define __OVERRIDE_VIRTUAL virtual
 #  define __UNUSED __attribute__((unused))
-#  define __EXPLICIT_OPERATOR
+#  define __NORET __attribute__((noreturn))
 
 # else
 #  define __WUR [[nodiscard]]
-#  define __CONST
 #  define __DEFAULT =default;
-#  define __DEFAULT_ASSIGN __DEFAULT
-#  define __DEFINE {};
-#  define __OVERRIDE_VIRTUAL
 #  define __UNUSED [[maybe_unused]]
-#  define __EXPLICIT_OPERATOR explicit
+#  define __NORET [[noreturn]]
 
 # endif /* 199711L */
 #endif /* DEFS_H */
