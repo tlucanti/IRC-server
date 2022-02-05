@@ -1,28 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   User.hpp                                           :+:      :+:    :+:   */
+/*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/02/04 17:49:10 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/04 17:51:32 by tlucanti         ###   ########.fr       */
+/*   Created: 2022/02/05 13:21:11 by tlucanti          #+#    #+#             */
+/*   Updated: 2022/02/05 13:32:18 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef USER_HPP
-# define USER_HPP
-
-#include <string>
+#ifndef CHANNEL_HPP
+# define CHANNEL_HPP
 
 namespace tlucanti
 {
-	struct User
+	struct Channel
 	{
-	public:
-		std::string &name;
-		std::string &
+		typedef std::list<int>	user_container_type;
+		typedef std::list<int>	oper_conrainer_type
+
+		std::string			name;
+		std::string			topic;
+		bool				is_local; // & if true, # if false
+
+		user_container_type	users;
+		oper_conrainer_type	operators;
 	};
 }
 
-#endif USER_HPP
+#endif /* CHANNEL_HPP */

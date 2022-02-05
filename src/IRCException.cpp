@@ -6,11 +6,11 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 14:00:46 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/04 14:21:58 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/05 23:42:54 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "IRCException.hpp"
+#include "../inc/IRCException.hpp"
 
 tlucanti::IRCException::IRCException(const std::string &parent,
 	const std::string &message, int error)

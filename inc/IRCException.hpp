@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 14:00:44 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/04 14:20:04 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/05 23:42:50 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,8 @@ namespace tlucanti
 			const std::string &message);
 		IRCException(const std::string &parent,
 			const std::string &message, const std::string &error);
-		virtual const char *what() const noexcept override;
+		~IRCException() noexcept override __DEFAULT
+		__WUR const char *what() const noexcept override;
 
 	protected:
 		std::string _message;

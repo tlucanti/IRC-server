@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/03 15:33:50 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/04 16:32:49 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/05 23:43:14 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,26 +45,6 @@ namespace tlucanti
 	const char *color::s  = "\033[0m";
 
 	const char *color::tlucanti   = (char *) "\033[19;1;96;21;6m";
-}
-
-namespace tlucanti
-{
-	std::string replace(const std::string &str, const std::string &from, const std::string &to)
-	{
-		if (from == to)
-			return str;
-		size_t it = str.find(from, 0);
-		std::string ret = str;
-		while (it != std::string::npos)
-		{
-//			ret = str.substr(0, it) + to +
-//				  str.substr(it + from.size(), std::string::npos);
-			ret = ret.replace(it, from.size(), to);
-			it += to.size();
-			it = str.find(from);
-		}
-		return ret;
-	}
 }
 
 const tlucanti::color &operator <<(const tlucanti::color &out, const std::string &message)

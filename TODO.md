@@ -8,6 +8,7 @@
 - clang tidy
 - c++98 compile
 - makefile
+- reformat tlucanti::IRCParser::parse and remove if/else
 
 ### NOW
 
