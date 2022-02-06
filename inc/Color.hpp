@@ -5,16 +5,19 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/02/03 15:33:50 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/05 23:43:14 by tlucanti         ###   ########.fr       */
+/*   Created: 2022/02/06 16:58:26 by tlucanti          #+#    #+#             */
+/*   Updated: 2022/02/06 17:43:10 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef COLOR_HPP
 # define COLOR_HPP
 
-#include <iostream>
-#include <string>
+# include <iostream>
+# include <string>
+
+# include "parser_utils.hpp"
+# include "defs.h"
 
 namespace tlucanti
 {
@@ -32,6 +35,12 @@ namespace tlucanti
 		static const char *s; // reset
 
 		static const char *tlucanti;
+
+		color() __DEFAULT
+
+	__DELETED_MEMBERS:
+		color(const color &) __DELETE
+		color &operator =(const color &) __DELETE
 	};
 
 	const char *color::k  = "\033[1;90m";

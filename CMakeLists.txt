@@ -17,13 +17,15 @@ add_executable(irc
 	inc/Color.hpp
 	inc/IRCParser.hpp
 	inc/IRCParserException.hpp
+	inc/parser_utils.hpp
 
 	src/IRCParser.cpp
 	src/Socket.cpp
 	src/Channel.cpp
 	src/server_utils.cpp
-	src/socket_utils.cpp
+	src/IRCcodes.cpp
 	src/Database.cpp
+	src/User.cpp
 	src/IRCException.cpp
 	src/main.cpp
 	src/Server.cpp

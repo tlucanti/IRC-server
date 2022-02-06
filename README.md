@@ -179,10 +179,21 @@
 > `REASON`, command available only for operators, user `USERNAME` can join
 > channel `CHANNEL` again (command `KICK` is forced command `PART`)
 
-KILL USERNAME REASON
+### VERSION
+
+### TIME
+
+### INFO
+
+### PRIVMSG USERNAME MESSAGE
+> send private message `MESSAGE` to user `USERNAME`
+
+### KILL USERNAME REASON
 > send message `REASON` to user `USERNAME` and breaks connection with him, user
 > `USERNAME` can login again
 
-PRIVMSG USERNAME MESSAGE
-> send private message `MESSAGE` to user `USERNAME`
+### PING
 
+### PONG
+
+### RESTART

@@ -21,14 +21,14 @@ namespace tlucanti
 	class IRCParserException : public std::exception
 	{
 	public:
-		IRCParserException(const char *message)
-				: _message(message) {}
-		IRCParserException(const std::string &message)
-				: _message(message.c_str()) {}
-		const char *what() const noexcept override { return _message; }
+		IRCParserException(int errnum, const char *message)
+				: _message(std::to_string(errnum) + ' ' + message) {}
+		IRCParserException(int errnum, const std::string &message)
+				: _message(std::to_string(errnum) + ' ' + message) {}
+		__WUR const char *what() const noexcept override { return _message.c_str(); }
 
 	private:
-		const char *_message;
+		std::string _message;
 	};
 }
 
