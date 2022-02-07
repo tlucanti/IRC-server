@@ -13,18 +13,19 @@
 #include "../inc/User.hpp"
 
 const tlucanti::User tlucanti::User::nil = User(-1);
+const char *tlucanti::User::modes = "iswo";
 
 tlucanti::User::User(int sock) noexcept
 		: sock_fd(sock), _has_pass(false), _has_nick(false), _has_user(false),
 		_irc_operator(false) {}
 
 void
-tlucanti::User::make_user(const std::string &nickname,
+tlucanti::User::make_user(const std::string &username,
 	const std::string &hostname, const std::string &servername,
 	const std::string &realname)
 {
 	_has_user = true;
-	_nickname = nickname;
+	_username = username;
 	_hostname = hostname;
 	_servername = servername;
 	_realname = realname;
@@ -33,8 +34,14 @@ tlucanti::User::make_user(const std::string &nickname,
 void
 tlucanti::User::make_nickname(const std::string &nickname)
 {
-	_nickname = nickname;
 	_has_nick = true;
+	_nickname = nickname;
+}
+
+std::string
+tlucanti::User::compose() const
+{
+	return _nickname + '!' + _username + '@' + tlucanti::server_address;
 }
 
 void

@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 10:35:49 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/06 17:43:46 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/07 21:02:35 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@ const char *tlucanti::IRCParser::NICKNAME = R"(0123456789abcdefghijklmnopqrstuvw
 void
 tlucanti::IRCParser::init()
 {
+	_raw_command = replace(_raw_command, "\r", "");
+	_raw_command = replace(_raw_command, "\n", "");
 	_raw_command = strip(_raw_command);
 //	_raw_command = squeeze(_raw_command); // multiple space -> single space
 //	_raw_command = replace(_raw_command, ", ", ","); // , ', ' -> ','
@@ -52,7 +54,9 @@ tlucanti::IRCParser::parse()
 
 	// reformat this function and remove if/else
 	std::transform(command.begin(), command.end(), command.begin(), ::toupper);
-	if (command == "PASS")
+	if (command == "CAP")
+	{}
+	else if (command == "PASS")
 	{
 		check_format(line, "cmd", "str");
 		password = line.at(1);
@@ -144,14 +148,16 @@ tlucanti::IRCParser::parse()
 		int add = 0;
 		if (not prefix.empty())
 			++add;
-		message = line.at(2 + add);
+		message = line.at(2 + add).substr(1);
 	}
 	else if (command == "KILL")
 		throw IRCException("[tlucanti::IRCParser::parse]", "implement kill command");
 	else if (command == "PING")
 		throw IRCException("[tlucanti::IRCParser::parse]", "implement ping command");
 	else if (command == "PONG")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement pong command");
+	{
+		check_format(line, "cmd", "str");
+	}
 	else if (command == "RESTART")
 		throw IRCException("[tlucanti::IRCParser::parse]", "implement restart command");
 	else
@@ -162,7 +168,12 @@ tlucanti::IRCParser::parse()
 std::string
 tlucanti::IRCParser::exec(const Socket &client, Database &database)
 {
+	init();
+	parse();
+
 	User &user = database[client];
+	if (command == "CAP")
+		return "";
 	if (command == "PASS")
 	{
 		user.check_perm("p-");
@@ -170,7 +181,7 @@ tlucanti::IRCParser::exec(const Socket &client, Database &database)
 			throw IRCParserException(IRCcodes::ERR_PASSWDMISMATCH,
 				"password incorrect");
 		user.make_pass();
-		return "authentication success";
+		return compose_message(User::nil, "NOTICE", "*", "authentication success");
 	}
 	else if (command == "NICK")
 	{
@@ -179,13 +190,27 @@ tlucanti::IRCParser::exec(const Socket &client, Database &database)
 		if (database.make_edge(nickname, client))
 			throw IRCParserException(IRCcodes::ERR_NICKNAMEINUSE,
 				"user with nickname `" + nickname + "` already exist");
-		return "nickname changed";
+		return compose_message(User::nil, "NOTICE", user, "nickname changed to " + nickname);
 	}
 	else if (command == "USER")
 	{
 		user.check_perm("n+");
 		user.make_user(nickname, hostname, servername, realname);
-		return "authorization success";
+		user.send_message(compose_message(User::nil, IRCcodes::RPL_WELCOME, user, "Welcome to the " + tlucanti::server_name + " Network, " + user.get_nickname()));
+		user.send_message(compose_message(User::nil, IRCcodes::RPL_YOURHOST, user, "Your host is " + tlucanti::server_name + ", running version " + tlucanti::server_version));
+		user.send_message(compose_message(User::nil, IRCcodes::RPL_CREATED, user, "This server was created " + tlucanti::server_begining));
+		user.send_message(compose_message(User::nil, IRCcodes::RPL_MYINFO, user.get_nickname() + ' ' + tlucanti::server_name + ' ' + tlucanti::server_version + ' ' + User::modes + ' ' + Channel::modes));
+		user.send_message(IRCParser("MOTD").exec(client, database));
+//		user.send_message("PING :FFFFFFFF45792174" + IRC::endl);
+		return "";
+		user.send_message(':' + tlucanti::server_name + " 001 " + user.get_nickname() +
+						  " :Welcome to the Internet Relay Network, " + user.get_nickname() + "\n" + IRC::endl);
+//		user.send_message(':' + tlucanti::server_name + " 002 " + user.get_nickname() +
+//			" :Your host is " + tlucanti::server_name + "[0.0.0.0/8080]" + ", running version " + "1.0" + IRC::endl);
+//		user.send_message(':' + tlucanti::server_name + " 003 " + ":This server was created Thu Mar 25 2021 at 14:41:58 UTC" + IRC::endl);
+//		user.send_message(':' + tlucanti::server_name + " 004 " + IRC::endl);
+//		user.send_message(':' + tlucanti::server_name + " ")
+		return "";
 	}
 	else if (command == "OPER")
 	{
@@ -249,8 +274,9 @@ tlucanti::IRCParser::exec(const Socket &client, Database &database)
 			if (cli == User::nil)
 				throw IRCParserException(IRCcodes::ERR_NOSUCHNICK,
 					"user with nickname `" + *it + "` does not exist");
-			cli.send_message(message);
-//			cli.send_message(compose_message(message));
+//			cli.send_message( message);
+			cli.send_message(':' + cli.get_nickname() + "!" + cli.get_username() + "@127.0.0.1 PRIVMSG " + user.get_nickname() + " :" + message + IRC::endl);
+//			cli.send_message(compose_message(user, IRCcodes::RPL_AWAY, cli, message));
 		}
 		for (arg_list_type::iterator it=chan_list.begin();
 			it != chan_list.end(); ++it)
@@ -273,7 +299,7 @@ tlucanti::IRCParser::exec(const Socket &client, Database &database)
 	}
 	else if (command == "PONG")
 	{
-
+		return "";
 	}
 	else if (command == "RESTART")
 	{
@@ -318,7 +344,7 @@ tlucanti::IRCParser::_check_format__macro(const arg_list_type &_line, arg_list_t
 
 	while (format_i != format.end())
 	{
-		std::cout << "checking " << *line_i << " == " << *format_i << std::endl;
+//		std::cout << "checking " << *line_i << " == " << *format_i << std::endl;
 		if (line_i == _line.end())
 		{
 			if (*format_i == "cmd")

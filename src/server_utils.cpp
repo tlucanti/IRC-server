@@ -56,15 +56,13 @@ namespace tlucanti
 
 	std::string make_response(const Socket &client, const std::string &request, Database &database)
 	{
-		IRCParser parser(request);
+
 		try
 		{
-			parser.init();
-			parser.parse();
-			return parser.exec(client, database);
+			return IRCParser(request).exec(client, database);
 		} catch (IRCParserException &exc)
 		{
-			return std::string(":") + exc.what();
+			return std::string(":") + tlucanti::server_name + " :" + exc.what() + IRC::endl;
 		}
 	}
 }

@@ -23,6 +23,12 @@
 
 namespace tlucanti
 {
+	extern std::string server_address;
+	extern std::string server_version;
+}
+
+namespace tlucanti
+{
 	#define check_perm(...) _check_perm__macro( \
 	({ \
 		const char *_fmt[] = {__VA_ARGS__}; \
@@ -50,13 +56,16 @@ namespace tlucanti
 		void make_nickname(const std::string &nickname);
 
 		__WUR inline const std::string &get_nickname() const { return _nickname; }
+		__WUR inline const std::string &get_username() const { return _username; }
 		__WUR inline const std::string &get_hostname() const { return _hostname; }
+		__WUR std::string compose() const;
 
 		__WUR inline bool operator ==(const User &cmp) const { return sock_fd == cmp.sock_fd; }
 
 		void _check_perm__macro(const std::vector<std::string> &format) const;
 
 		static const User nil;
+		static const char *modes;
 
 	private:
 		int			sock_fd;		// new socked appeared
@@ -66,6 +75,7 @@ namespace tlucanti
 		bool		_irc_operator;
 
 		std::string	_nickname;
+		std::string _username;
 		std::string	_hostname;
 		std::string _servername;
 		std::string _realname;

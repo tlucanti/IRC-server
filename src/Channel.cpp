@@ -13,6 +13,7 @@
 #include "../inc/Channel.hpp"
 
 const tlucanti::Channel tlucanti::Channel::nil = tlucanti::Channel(true);
+const char *Channel::modes = "opsitnmlvk";
 
 tlucanti::Channel::Channel(const std::string &name, const User &creator)
 		: name(name), is_nil(false)

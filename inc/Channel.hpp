@@ -53,6 +53,7 @@ namespace tlucanti
 
 		static const Channel nil;
 		explicit Channel(bool) noexcept : is_nil(true) {}
+		static const char *modes;
 
 	private:
 		std::string			name;

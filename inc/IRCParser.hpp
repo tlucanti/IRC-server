@@ -31,6 +31,8 @@ namespace tlucanti
 {
 	extern std::string server_name;
 	extern std::string server_password;
+	extern std::string server_begining;
+	extern std::string server_version;
 }
 
 namespace tlucanti
