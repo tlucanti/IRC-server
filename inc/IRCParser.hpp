@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 14:20:18 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/06 17:43:18 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/08 11:08:09 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include "IRCParserException.hpp"
 #include "IRCException.hpp"
 #include "parser_utils.hpp"
+#include "IRCrpl.hpp"
 
 namespace tlucanti
 {
@@ -33,6 +34,9 @@ namespace tlucanti
 	extern std::string server_password;
 	extern std::string server_begining;
 	extern std::string server_version;
+	extern std::string server_oper_login;
+	extern std::string server_oper_password;
+	extern Database database;
 }
 
 namespace tlucanti
@@ -51,16 +55,18 @@ namespace tlucanti
 		typedef std::vector<std::string>	arg_list_type;
 
 		IRCParser(const std::string &raw_command)
-				: _raw_command(raw_command), has_suffix(false) {}
+				: _raw_command(raw_command), has_suffix(false), user(nullptr) {}
 
-		void init();
-		void parse();
-		std::string exec(const Socket &client, Database &database);
-
+		std::string exec(const Socket &client);
 		std::string		prefix;
 		std::string		command;
+
 		arg_list_type	arguments;
 		arg_list_type	line;
+
+	private:
+		void init();
+		void parse();
 
 		std::string nickname;
 		std::string password;
@@ -73,8 +79,14 @@ namespace tlucanti
 		arg_list_type user_list;
 		arg_list_type pass_list;
 		bool has_suffix;
+		User *user;
 
-	private:
+		__WUR std::string compose_cap() const;
+		__WUR std::string compose_pass() const;
+		__WUR std::string compose_nick() const;
+		__WUR std::string compose_user() const;
+		__WUR std::string compose_oper() const;
+
 		static std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
 		void _check_format__macro(const arg_list_type &_line, arg_list_type &_fmt);
 		__WUR bool contains_only(const std::string &str, const std::string &format);
@@ -89,6 +101,7 @@ namespace tlucanti
 		IRCParser() __DELETE
 		IRCParser(const IRCParser &) __DELETE
 		IRCParser &operator =(const IRCParser &) __DELETE
+
 	};
 }
 

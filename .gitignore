@@ -1,2 +1,6 @@
+dep
+obj
+ircserv
+.gdb_history
 .idea
 cmake-build-debug

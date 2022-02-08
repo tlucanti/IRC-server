@@ -45,35 +45,35 @@ tlucanti::Database::make_edge(const std::string &nickname, const Socket &sock)
 }
 
 
-__WUR tlucanti::User &
+__WUR tlucanti::User *
 tlucanti::Database::operator [](int fd) const
 {
 	fd_hashmap_type::const_iterator it = fd_access.find(fd);
 	if (it == fd_access.end())
-		return const_cast<User &>(User::nil);
-	return *it->second;
+		return nullptr;
+	return it->second;
 }
 
-__WUR tlucanti::User &
+__WUR tlucanti::User *
 tlucanti::Database::operator [](const std::string &nickname) const
 {
 	string_hashmap_type::const_iterator it = str_access.find(nickname);
 	if (it == str_access.end())
-		return const_cast<User &>(User::nil);
-	return *it->second;
+		return nullptr;
+	return it->second;
 }
 
-__WUR tlucanti::User &
+__WUR tlucanti::User *
 tlucanti::Database::operator [](const Socket &client) const
 {
 	return (*this)[client.get_sock()];
 }
 
-__WUR tlucanti::Channel &
+__WUR tlucanti::Channel *
 tlucanti::Database::get_channel(const std::string &channel) const
 {
-	channel_container_type::const_iterator it = cahnnels.find(channel);
-	if (it == cahnnels.end())
-		return const_cast<Channel &>(Channel::nil);
-	return *it->second;
+	channel_container_type::const_iterator it = channels.find(channel);
+	if (it == channels.end())
+		return nullptr;
+	return it->second;
 }

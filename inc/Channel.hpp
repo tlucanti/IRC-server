@@ -26,6 +26,7 @@
 
 namespace tlucanti
 {
+	class User;
 	struct Channel
 	{
 		Channel(const std::string &name, const User &creator);
@@ -49,10 +50,6 @@ namespace tlucanti
 		__WUR inline const std::string &get_topic() const { return _topic; }
 		inline void new_topic(const std::string &topic);
 
-		__WUR inline bool operator ==(const Channel &cmp) const { return is_nil && cmp.is_nil; }
-
-		static const Channel nil;
-		explicit Channel(bool) noexcept : is_nil(true) {}
 		static const char *modes;
 
 	private:

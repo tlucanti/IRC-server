@@ -15,6 +15,7 @@ add_executable(irc
 	inc/Channel.hpp
 	inc/IRCcodes.h
 	inc/Color.hpp
+	inc/IRCrpl.hpp
 	inc/IRCParser.hpp
 	inc/IRCParserException.hpp
 	inc/parser_utils.hpp
@@ -22,6 +23,7 @@ add_executable(irc
 	src/IRCParser.cpp
 	src/Socket.cpp
 	src/Channel.cpp
+	src/IRCParser_compose.cpp
 	src/server_utils.cpp
 	src/IRCcodes.cpp
 	src/Database.cpp

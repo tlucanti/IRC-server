@@ -6,14 +6,15 @@
 #    By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/11/08 14:54:30 by kostya            #+#    #+#              #
-#    Updated: 2022/02/05 10:36:09 by tlucanti         ###   ########.fr        #
+#    Updated: 2022/02/08 17:28:12 by tlucanti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 # ------------------------------ compiler options ------------------------------
 NAME		=	ircserv
-CXX			=	clang++ -std=c++98
-CXXFLAGS	=	-Wall -Wextra -Werror
+CXX			=	clang++ -std=c++2a -g3
+CXXFLAGS	=
+# -Wall -Wextra -Werror
 CXXOPTIONS	=	-O2
 CC			=	CC
 # ------------------------------- linker options -------------------------------
@@ -24,13 +25,17 @@ SCRS_DIR	=	src
 DEPS_DIR	=	dep
 # ------------------------------- project sorces -------------------------------
 SRCS		=	\
-				IRCException	\
-				Server			\
-				Socket			\
-				irc_parser		\
-				main			\
-				server_utils	\
-				socket_utils
+				Channel				\
+				Database			\
+				IRCException		\
+				IRCParser			\
+				IRCParser_compose	\
+				IRCcodes			\
+				Server				\
+				Socket				\
+				User				\
+				main				\
+				server_utils
 
 # ======================= UNCHANGEABLE PART OF MAKEFILE ========================
 # ------------------------------------------------------------------------------

@@ -10,12 +10,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iterator>
+#ifndef PARSER_UTILS_HPP
+# define PARSER_UTILS_HPP
 
-#include "User.hpp"
+# include <vector>
+# include <string>
+# include <sstream>
+# include <iterator>
 
 namespace tlucanti::IRC
 {
@@ -24,6 +25,18 @@ namespace tlucanti::IRC
 
 namespace tlucanti
 {
+	template<class T, class U>
+	struct is_same : std::false_type {};
+
+	template<class T>
+	struct is_same<T, T> : std::true_type {};
+
+	template <typename T, typename Who>
+	bool isinstance(__UNUSED const Who &)
+	{
+		return is_same<T, Who>::value;
+	}
+
 	inline void split(const std::string &str, std::vector<std::string> &out, char c=' ')
 	{
 		if (c == ' ')
@@ -127,51 +140,51 @@ namespace tlucanti
 		}
 	}
 
-	inline std::string compose_message(const User &from,
-		irc_code_t code, const User &recepient, const std::string &message)
-	{
-		std::string _from;
-		if (from == User::nil)
-			_from = tlucanti::server_name;
-		else
-			_from = from.compose();
-		std::string ret = ':' + _from + ' ' +
-			std::to_string(code) + ' ' + recepient.get_nickname() +
-			+ " :" + message + IRC::endl;
-		return ret;
-	}
+//	inline std::string compose_message(const User &from,
+//		irc_code_t code, const User &recepient, const std::string &message)
+//	{
+//		std::string _from;
+//		if (from == nullptr)
+//			_from = tlucanti::server_name;
+//		else
+//			_from = from.compose();
+//		std::string ret = ':' + _from + ' ' +
+//			std::to_string(code) + ' ' + recepient.get_nickname() +
+//			+ " :" + message + IRC::endl;
+//		return ret;
+//	}
 
-	inline std::string compose_message(const User &from,
-		const std::string &command, const std::string &recepient, const std::string &message)
-	{
-		std::string _from;
-		if (from == User::nil)
-			_from = tlucanti::server_name;
-		else
-			_from = from.compose();
-		std::string ret = ':' + _from + ' ' + command + ' ' + recepient + " :" + message + IRC::endl;
-		return ret;
-	}
+//	inline std::string compose_message(const User &from,
+//		const std::string &command, const std::string &recepient, const std::string &message)
+//	{
+//		std::string _from;
+//		if (from == User::nil)
+//			_from = tlucanti::server_name;
+//		else
+//			_from = from.compose();
+//		std::string ret = ':' + _from + ' ' + command + ' ' + recepient + " :" + message + IRC::endl;
+//		return ret;
+//	}
 
-	inline std::string compose_message(const User &from,
-		const std::string &command, const User &recepient, const std::string &message)
-	{
-		return compose_message(from, command, recepient.get_nickname(), message);
-	}
+//	inline std::string compose_message(const User &from,
+//		const std::string &command, const User &recepient, const std::string &message)
+//	{
+//		return compose_message(from, command, recepient.get_nickname(), message);
+//	}
 
-	inline std::string compose_message(const User &from,
-									   irc_code_t code, const std::string &message)
-	{
-		std::string _from;
-		if (from == User::nil)
-			_from = tlucanti::server_name;
-		else
-			_from = from.compose();
-		std::string ret = ':' + _from + ' ' +
-						  std::to_string(code) + ' ' +
-						  message + IRC::endl;
-		return ret;
-	}
+//	inline std::string compose_message(const User &from,
+//									   irc_code_t code, const std::string &message)
+//	{
+//		std::string _from;
+//		if (from == User::nil)
+//			_from = tlucanti::server_name;
+//		else
+//			_from = from.compose();
+//		std::string ret = ':' + _from + ' ' +
+//						  std::to_string(code) + ' ' +
+//						  message + IRC::endl;
+//		return ret;
+//	}
 
 	inline std::string get_current_time() {
 		const char *month[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September",
@@ -204,3 +217,5 @@ namespace tlucanti
 		return ret;
 	}
 }
+
+#endif /* PARSER_UTILS_HPP */

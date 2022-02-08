@@ -41,6 +41,10 @@
 > - ERR_NEEDMOREPARAMS
 > - ERR_ALREADYREGISTRED
 
+### PING
+
+### PONG
+
 ### \[:USERNAME\] OPER LOGIN PASSWORD
 > make current user irc operator, `LOGIN` and `PASSWORD` are required to gain
 > privileges
@@ -63,6 +67,8 @@
 > ```
 > #### responses:
 > None
+
+### ERROR
 
 ### \[:USERNAME\] JOIN \#CHANNEL1\[,&CHANNEL2 \[...\]\] \[KEY1\[,KEY2\] \[...\]\]
 > join to channels named by comas using keys (if provided), if channel is not
@@ -98,8 +104,6 @@
 > - ERR_NEEDMOREPARAMS
 > - ERR_NOSUCHCHANNEL
 > - ERR_NOTONCHANNEL
-
-### MODE
 
 ### \[:USERNAME\] TOPIC #CHANNEL \[:NEWTOPIC\]
 > command changes topic of channel `CHANNEL` to `NEWTOPIC` or get channel topic
@@ -179,21 +183,28 @@
 > `REASON`, command available only for operators, user `USERNAME` can join
 > channel `CHANNEL` again (command `KICK` is forced command `PART`)
 
+### MOTD
+
 ### VERSION
 
-### TIME
+### ADMIN
+
+### HELP
 
 ### INFO
 
+### MODE
+
 ### PRIVMSG USERNAME MESSAGE
 > send private message `MESSAGE` to user `USERNAME`
+
 
 ### KILL USERNAME REASON
 > send message `REASON` to user `USERNAME` and breaks connection with him, user
 > `USERNAME` can login again
 
-### PING
-
-### PONG
-
 ### RESTART
+
+### SQUIT
+
+### TIME

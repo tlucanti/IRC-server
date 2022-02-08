@@ -6,36 +6,45 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 12:09:27 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/06 17:44:02 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/08 22:18:09 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/User.hpp"
+#include "../inc/Database.hpp"
 
-const tlucanti::User tlucanti::User::nil = User(-1);
 const char *tlucanti::User::modes = "iswo";
 
+namespace tlucanti {
+	extern tlucanti::Database database;
+}
+
 tlucanti::User::User(int sock) noexcept
-		: sock_fd(sock), _has_pass(false), _has_nick(false), _has_user(false),
-		_irc_operator(false) {}
+		: sock_fd(sock)
+{
+	_modes.pass = false;
+	_modes.nick = false;
+	_modes.reg = false;
+	_modes.oper = false;
+}
+
+void
+tlucanti::User::make_nickname(const std::string &nickname)
+{
+	_modes.nick = true;
+	_nickname = nickname;
+}
 
 void
 tlucanti::User::make_user(const std::string &username,
 	const std::string &hostname, const std::string &servername,
 	const std::string &realname)
 {
-	_has_user = true;
+	_modes.reg = true;
 	_username = username;
 	_hostname = hostname;
 	_servername = servername;
 	_realname = realname;
-}
-
-void
-tlucanti::User::make_nickname(const std::string &nickname)
-{
-	_has_nick = true;
-	_nickname = nickname;
 }
 
 std::string
@@ -52,36 +61,79 @@ tlucanti::User::send_message(const std::string &message) const
 
 
 void 
-tlucanti::User::_check_perm__macro(const std::vector<std::string> &format) const
+tlucanti::User::assert_mode__macro(const std::vector<std::string> &format) const
 {
 	for (std::vector<std::string>::const_iterator it=format.begin(); it != format.end(); ++it)
 	{
 		bool unknown = true;
-		if (*it == "p-")
+		if (*it == "pass-")
 		{
 			unknown = false;
-			if (_has_pass)
-				throw IRCParserException(IRCcodes::ERR_ALREADYREGISTRED, "you are already authorized");
+			if (_modes.pass)
+				throw IRCParserException(IRC::ERR_ALREADYREGISTERED(*this));
 		}
-		if (*it == "p+" or *it == "n+" or *it == "u+")
+		if (*it == "pass+" or *it == "nick+" or *it == "reg+")
 		{
 			unknown = false;
-			if (not _has_pass)
-				throw IRCParserException(IRCcodes::ERR_NOTREGISTERED, "you need to authenticate before use this command");
+			if (not _modes.pass)
+				throw IRCParserException(IRC::ERR_NOTREGISTERED(*this));
 		}
-		if (*it == "n+" or *it == "u+")
+		if (*it == "nick+" or *it == "reg+")
 		{
 			unknown = false;
-			if (not _has_nick)
-				throw IRCParserException(IRCcodes::ERR_NOTREGISTERED, "you need to identificate before use this command");
+			if (not _modes.nick)
+				throw IRCParserException(IRC::ERR_NOTREGISTERED(*this));
 		}
-		if (*it == "u+")
+		if (*it == "reg+")
 		{
 			unknown = false;
-			if (not _has_user)
-				throw IRCParserException(IRCcodes::ERR_NOTREGISTERED, "you need to authorize before use this command");
+			if (not _modes.reg)
+				throw IRCParserException(IRC::ERR_NOTREGISTERED(*this));
 		}
 		if (unknown)
-			throw IRCException("[internal error]", "invalid permission check flag", *it);
+			throw IRCException("[tlucanti::User::assert_mode__macro]", "invalid permission check flag", *it);
 	}
+}
+
+bool
+tlucanti::User::has_mode__macro(const std::vector<std::string> &format) const
+{
+	try {
+		assert_mode__macro(format);
+		return true;
+	} catch (IRCParserException &exc) {
+		return false;
+	}
+}
+
+void
+tlucanti::User::make_mode__macro(const std::vector<std::string> &format)
+{
+	for (std::vector<std::string>::const_iterator it=format.begin(); it != format.end(); ++it)
+	{
+		bool unknown = true;
+		if (*it == "pass+")
+		{
+			unknown = false;
+			_modes.pass = true;
+		}
+		else if (*it == "o+")
+		{
+			unknown = false;
+			_modes.oper = true;
+			++database.operators_cnt;
+		}
+		if (unknown)
+			throw IRCException("[tlucanti::User::make_mode__macro]", "invalid permission check flag", *it);
+	}
+}
+
+std::ostream &
+operator <<(std::ostream &out, const tlucanti::User &usr)
+{
+	if (usr.get_nickname().empty())
+		out << '*';
+	else
+		out << usr.get_nickname();
+	return out;
 }

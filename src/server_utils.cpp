@@ -18,14 +18,14 @@
 
 namespace tlucanti
 {
-	std::string make_response(const Socket &client, const std::string &request, Database &database);
+	extern Database database;
+	std::string make_response(const Socket &client, const std::string &request);
 }
 
 namespace tlucanti
 {
 	__NORET void server_start(Server &server)
 	{
-		Database database;
 		while (true)
 		{
 			Socket new_cli = server.accept();
@@ -47,22 +47,21 @@ namespace tlucanti
 					continue ;
 
 				std::cout << "data from client " << client.get_sock() << " (" << it->size() << "): <" << it->substr(0, it->size() - 1) << ">\n";
-				std::string response = make_response(client, *it, database);
+				std::string response = make_response(client, *it);
 				if (not response.empty())
 					client.send(response);
 			}
 		}
 	}
 
-	std::string make_response(const Socket &client, const std::string &request, Database &database)
+	std::string make_response(const Socket &client, const std::string &request)
 	{
 
 		try
 		{
-			return IRCParser(request).exec(client, database);
-		} catch (IRCParserException &exc)
-		{
-			return std::string(":") + tlucanti::server_name + " :" + exc.what() + IRC::endl;
+			return IRCParser(request).exec(client);
+		} catch (IRCParserException &exc) {
+			return exc.what();
 		}
 	}
 }

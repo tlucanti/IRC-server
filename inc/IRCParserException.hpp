@@ -21,11 +21,9 @@ namespace tlucanti
 	class IRCParserException : public std::exception
 	{
 	public:
-		IRCParserException(int errnum, const char *message)
-				: _message(std::to_string(errnum) + ' ' + message) {}
-		IRCParserException(int errnum, const std::string &message)
-				: _message(std::to_string(errnum) + ' ' + message) {}
-		__WUR const char *what() const noexcept override { return _message.c_str(); }
+		IRCParserException(const std::string &response)
+				: _message(response) {}
+		__WUR const char *what() const noexcept override { return _message.c_str(); } // delete this
 
 	private:
 		std::string _message;
