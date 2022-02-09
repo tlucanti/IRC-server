@@ -23,7 +23,8 @@ namespace tlucanti
 	public:
 		IRCParserException(const std::string &response)
 				: _message(response) {}
-		__WUR const char *what() const noexcept override { return _message.c_str(); } // delete this
+		IRCParserException() __DEFAULT
+		__WUR const char *what() const noexcept override { return _message.c_str(); }
 
 	private:
 		std::string _message;

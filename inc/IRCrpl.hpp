@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/08 22:09:55 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/09 20:59:03 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,21 @@
 
 namespace tlucanti
 {
-	extern std::string server_name;
+	extern const char *server_name;
+	extern const char *server_address;
+	extern const char *server_version;
+	extern const char *server_oper_login;
+	extern const char *server_oper_password;
+
 	extern std::string server_password;
-	extern std::string server_address;
 	extern std::string server_begining;
-	extern std::string server_version;
 	extern unsigned short server_port;
+
+	extern const unsigned int channel_max_users;
+	extern const unsigned int chanel_max_name_len;
+	extern const unsigned int channel_max_topic_len;
+	extern const unsigned int user_max_channels;
+	extern const unsigned int user_max_nick_len;
 }
 
 namespace tlucanti::IRC
@@ -205,6 +214,49 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
+	template <typename nick_T, typename to_T>
+	inline std::string RPL_AWAY(const nick_T &nickname, const to_T &recepient,
+		const std::string &message)
+	/*
+		(301) :`NICK(full)` PRIVMSG `RECEPIENT` :`MESSAGE`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << nickname.compose() << " PRIVMSG " <<
+			recepient << " :" << message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename nick_T, typename chan_T, typename list_T>
+	inline std::string RPL_NAMREPLY(const nick_T &nickname, char symbol,
+		const chan_T &channel, const list_T &user_list)
+	/*
+		:`SERVER` 353 `NICKNAME` `SYM` `CHANNEL` :`USER1` `USER2` ...
+	*/
+	{
+		std::string start;
+		{
+			std::stringstream ss;
+			ss << ':' << tlucanti::server_name << ' ' <<
+				IRCcodes::RPL_NAMREPLY << ' ' << nickname << ' ' symbol <<
+				' ' << channel << " :";
+			start = ss.str();
+		}
+		std::stringstream ss;
+		int dec = 0;
+		for (list_T::iterator it=user_list.begin(); it != user_list.end(); ++it)
+		{
+			if (dec == 10)
+			{
+				ss << IRC::endl << start;
+				dec = 0;
+			}
+			ss << ' ' << (**it);
+			++dec;
+		}
+		return ss.str();
+	}
+
 	template <typename nick_T>
 	inline std::string RPL_MOTD(const nick_T &nickname, const char *fname)
 	/*
@@ -255,6 +307,19 @@ namespace tlucanti::IRC
 	}
 
 	template <typename nick_T>
+	inline std::string RPL_YOUREOPER(const nick_T &nickname,
+		const std::string &message)
+	/*
+		:`SERVER` 381 `NICK` :`MESSAGE`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_YOUREOPER <<
+			' ' << nickname << " :" << message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename nick_T>
 	inline std::string ERR_NOSUCHNICK(const nick_T &nickname,
 		const std::string &recepient, const std::string &what)
 	/*
@@ -272,12 +337,26 @@ namespace tlucanti::IRC
 	inline std::string ERR_NOSUCHCHANNEL(const nick_T &nickname,
 		const chan_T &channel, const std::string &message)
 	/*
-		:`SERCER` 403 `NICK` `CHANNEL` :`MESSAGE`
+		:`SERVER` 403 `NICK` `CHANNEL` :`MESSAGE`
 	*/
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NOSUCHCHANNEL <<
 			' ' << nickname << ' ' << channel << " :" << message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename nick_T, typename chan_T>
+	inline std::string ERR_TOOMANYCHANNELS(const nick_T &nickname,
+		const chan_T &channel)
+	/*
+		:`SERVER` 405 `NICK` `CHANNEL` :You have joined too many channels
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_TOOMANYCHANNELS << ' ' << nickname << ' ' <<
+			channel << " :You have joined too many channels" << IRC::endl;
 		return ss.str();
 	}
 
@@ -326,7 +405,7 @@ namespace tlucanti::IRC
 	*/
 	{
 		std::stringstream ss;
-		ss << ':' + tlucanti::server_name << ' ' << IRCcodes::ERR_NONICKNAMEGIVEN <<
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NONICKNAMEGIVEN <<
 			' ' << nickname << " :Expected nickname" << IRC::endl;
 		return ss.str();
 	}
@@ -384,11 +463,27 @@ namespace tlucanti::IRC
 
 	template <typename nick_T>
 	inline std::string ERR_PASSWDMISMATCH(const nick_T &nickname)
+	/*
+		:`SERVER` 464 `NICK` :Password incorrect
+	*/
 	{
-		// :SERVER 464 `NICK` :Password incorrect
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' <<
 			IRCcodes::ERR_PASSWDMISMATCH << ' ' << nickname << " :Password incorrect" << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename nick_T, typename chan_T>
+	inline std::string ERR_CHANNELISFULL(const nick_T &nickname,
+		const chan_T &channel)
+	/*
+		:`SERVER` 464 `NICK` `CHANNEL` :Channel is full
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_CHANNELISFULL << nickname << ' ' << channel <<
+			" :Channel is full" << IRC::endl;
 		return ss.str();
 	}
 }

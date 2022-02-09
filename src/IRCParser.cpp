@@ -17,6 +17,11 @@ const char *tlucanti::IRCParser::PRINTABLESPACE = R"(0123456789abcdefghijklmnopq
 const char *tlucanti::IRCParser::LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char *tlucanti::IRCParser::NICKNAME = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-[]\`^{}*)";
 
+namespace tlucanti
+{
+	extern Database database;
+}
+
 void
 tlucanti::IRCParser::init()
 {
@@ -88,11 +93,9 @@ tlucanti::IRCParser::parse()
 	}
 	else if (command == "QUIT")
 	{
-		check_format(line, "[:nick]", "cmd", ":msg");
-		int add = 0;
-		if (not prefix.empty())
-			++add;
-		message = line.at(1 + add);
+		check_format(line, "cmd", "[:msg]");
+		if (has_suffix)
+			message = line.at(1);
 	}
 	else if (command == "JOIN")
 		check_format(line, "[:nick]", "cmd", "chan_list", "[pass_list]");
@@ -164,7 +167,14 @@ tlucanti::IRCParser::parse()
 std::string
 tlucanti::IRCParser::exec(const Socket &client)
 {
-	user = database[client];
+	if (not prefix.empty())
+	{
+		user = database[prefix];
+		if (user == nullptr)
+			return IRC::ERR_NOSUCHNICK(database[client], prefix, "user with nickname");
+	}
+	else
+		user = database[client];
 
 	init();
 	parse();
@@ -184,9 +194,7 @@ tlucanti::IRCParser::exec(const Socket &client)
 
 	}
 	else if (command == "JOIN")
-	{
-
-	}
+		return compose_join();
 	else if (command == "PART")
 	{
 
@@ -236,6 +244,7 @@ tlucanti::IRCParser::exec(const Socket &client)
 			User *cli = database[*it];
 			if (cli == nullptr)
 				throw IRCParserException(IRC::ERR_NOSUCHNICK(*user, *it, "user with nickname"));
+			cli->send_message(IRC::RPL_AWAY(*user, *cli, message));
 		}
 		for (arg_list_type::iterator it=chan_list.begin();
 			it != chan_list.end(); ++it)
@@ -295,7 +304,7 @@ tlucanti::IRCParser::split_string(const std::string &str, arg_list_type &out)
 }
 
 void
-tlucanti::IRCParser::_check_format__macro(const arg_list_type &_line, arg_list_type &format)
+tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_type &format)
 {
 	arg_list_type::iterator format_i = format.begin();
 	arg_list_type::const_iterator line_i = _line.begin();

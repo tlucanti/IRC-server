@@ -6,18 +6,13 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 12:09:27 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/08 22:18:09 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/09 15:59:20 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/User.hpp"
-#include "../inc/Database.hpp"
 
 const char *tlucanti::User::modes = "iswo";
-
-namespace tlucanti {
-	extern tlucanti::Database database;
-}
 
 tlucanti::User::User(int sock) noexcept
 		: sock_fd(sock)
@@ -59,47 +54,74 @@ tlucanti::User::send_message(const std::string &message) const
 	Socket(sock_fd).send(message);
 }
 
+void
+tlucanti::User::send_to_chanels(const std::string &message) const
+{
+	for (channels_list::iterator it=channels_member.begin(); it != channels_member.end(); ++it)
+		(*it)->send_message(message);
+}
+
+void
+tlucanti::User::add_channel(Channel &chan)
+{
+	channels_member.insert(&chan);
+}
+
+void
+tlucanti::User::remove_channel(Channel &chan)
+{
+	channels_member.erase(&chan);
+}
 
 void 
-tlucanti::User::assert_mode__macro(const std::vector<std::string> &format) const
+tlucanti::User::assert_mode(const std::string &mode) const
 {
-	for (std::vector<std::string>::const_iterator it=format.begin(); it != format.end(); ++it)
+	bool unknown = true;
+	if (mode == "pass-")
 	{
-		bool unknown = true;
-		if (*it == "pass-")
-		{
-			unknown = false;
-			if (_modes.pass)
-				throw IRCParserException(IRC::ERR_ALREADYREGISTERED(*this));
-		}
-		if (*it == "pass+" or *it == "nick+" or *it == "reg+")
-		{
-			unknown = false;
-			if (not _modes.pass)
-				throw IRCParserException(IRC::ERR_NOTREGISTERED(*this));
-		}
-		if (*it == "nick+" or *it == "reg+")
-		{
-			unknown = false;
-			if (not _modes.nick)
-				throw IRCParserException(IRC::ERR_NOTREGISTERED(*this));
-		}
-		if (*it == "reg+")
-		{
-			unknown = false;
-			if (not _modes.reg)
-				throw IRCParserException(IRC::ERR_NOTREGISTERED(*this));
-		}
-		if (unknown)
-			throw IRCException("[tlucanti::User::assert_mode__macro]", "invalid permission check flag", *it);
+		unknown = false;
+		if (_modes.pass)
+			throw IRCParserException(IRC::ERR_ALREADYREGISTERED(*this));
 	}
+	if (mode == "pass+" or mode == "nick+" or mode == "reg+")
+	{
+		unknown = false;
+		if (not _modes.pass)
+			throw IRCParserException(IRC::ERR_NOTREGISTERED(*this));
+	}
+	if (mode == "nick+" or mode == "reg+")
+	{
+		unknown = false;
+		if (not _modes.nick)
+			throw IRCParserException(IRC::ERR_NOTREGISTERED(*this));
+	}
+	if (mode == "reg+")
+	{
+		unknown = false;
+		if (not _modes.reg)
+			throw IRCParserException(IRC::ERR_NOTREGISTERED(*this));
+	}
+	if (mode == "reg-")
+	{
+		unknown = false;
+		if (_modes.reg)
+			throw IRCParserException(IRC::ERR_ALREADYREGISTERED(*this));
+	}
+	if (mode == "full-")
+	{
+		unknown = false;
+		if (channels_member.size() < tlucanti::user_max_channels)
+			throw tlucanti::IRCParserException(IRC::ERR_TOOMANYCHANNELS(*this, "*"));
+	}
+	if (unknown)
+		throw IRCException("[tlucanti::User::assert_mode__macro]", "invalid permission check flag", mode);
 }
 
 bool
-tlucanti::User::has_mode__macro(const std::vector<std::string> &format) const
+tlucanti::User::has_mode(const std::string &mode) const
 {
 	try {
-		assert_mode__macro(format);
+		assert_mode(mode);
 		return true;
 	} catch (IRCParserException &exc) {
 		return false;
@@ -107,29 +129,25 @@ tlucanti::User::has_mode__macro(const std::vector<std::string> &format) const
 }
 
 void
-tlucanti::User::make_mode__macro(const std::vector<std::string> &format)
+tlucanti::User::make_mode(const std::string &mode)
 {
-	for (std::vector<std::string>::const_iterator it=format.begin(); it != format.end(); ++it)
+	bool unknown = true;
+	if (mode == "pass+")
 	{
-		bool unknown = true;
-		if (*it == "pass+")
-		{
-			unknown = false;
-			_modes.pass = true;
-		}
-		else if (*it == "o+")
-		{
-			unknown = false;
-			_modes.oper = true;
-			++database.operators_cnt;
-		}
-		if (unknown)
-			throw IRCException("[tlucanti::User::make_mode__macro]", "invalid permission check flag", *it);
+		unknown = false;
+		_modes.pass = true;
 	}
+	else if (mode == "o+")
+	{
+		unknown = false;
+		_modes.oper = true;
+	}
+	if (unknown)
+		throw IRCException("[tlucanti::User::make_mode__macro]", "invalid permission check flag", mode);
 }
 
 std::ostream &
-operator <<(std::ostream &out, const tlucanti::User &usr)
+tlucanti::operator <<(std::ostream &out, const tlucanti::User &usr)
 {
 	if (usr.get_nickname().empty())
 		out << '*';

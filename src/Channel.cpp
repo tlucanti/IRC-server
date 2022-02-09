@@ -14,12 +14,8 @@
 
 const char *tlucanti::Channel::modes = "opsitnmlvk";
 
-tlucanti::Channel::Channel(const std::string &name, const User &creator)
-		: name(name), is_nil(false)
-{
-	add_user(creator);
-	add_oper(creator);
-}
+tlucanti::Channel::Channel(const std::string &name)
+		: name(name), is_nil(false) {}
 
 void
 tlucanti::Channel::add_user(const User &new_user)
@@ -31,6 +27,45 @@ void
 tlucanti::Channel::add_oper(const User &new_oper)
 {
 	operators.insert(new_oper.get_sock());
+}
+
+void
+tlucanti::Channel::assert_mode(const std::string &mode) const
+{
+	bool unknown = true;
+	if (mode == "full+")
+	{
+		unknown = false;
+		if (users.size() < tlucanti::channel_max_users)
+			throw IRCParserException();
+	}
+	if (unknown)
+		throw IRCException("[tlucanti::User::assert_mode__macro]", "invalid permission check flag", mode);
+}
+
+bool
+tlucanti::Channel::has_mode(const std::string &mode) const
+{
+	try {
+		assert_mode(mode);
+		return true;
+	} catch (IRCParserException &exc) {
+		return false;
+	}
+}
+
+void
+tlucanti::Channel::make_pass(const std::string &_pass)
+{
+	pass = _pass;
+}
+
+bool
+tlucanti::Channel::check_pass(const std::string &_pass) const
+{
+	if (pass.empty())
+		return true;
+	return _pass == pass;
 }
 
 void
@@ -46,9 +81,9 @@ tlucanti::Channel::remove_oper(const User &del_oper)
 }
 
 void
-tlucanti::Channel::new_topic(const std::string &topic)
+tlucanti::Channel::new_topic(const std::string &_topic)
 {
-	_topic = topic;
+	topic = _topic;
 }
 
 void

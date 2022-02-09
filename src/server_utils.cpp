@@ -13,7 +13,6 @@
 #include <iostream>
 
 #include "../inc/Server.hpp"
-#include "../inc/Database.hpp"
 #include "../inc/IRCParser.hpp"
 
 namespace tlucanti

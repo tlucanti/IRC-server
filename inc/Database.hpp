@@ -29,9 +29,10 @@ namespace tlucanti
 	class Database
 	{
 	public:
-		Database() : invisible_users(0), operators_cnt(0) {}
+		Database() noexcept : invisible_users(0), operators_cnt(0) {}
 		~Database();
 
+		Channel *add_channel(const std::string &name);
 		void add_client(const Socket &sock);
 		void remove_client(Socket &sock);
 		void remove_client(const std::string &nickname);
@@ -63,5 +64,6 @@ namespace tlucanti
 		Database &operator =(const Database &) __DELETE
 	};
 }
+
 
 #endif /* DATABASE_HPP */

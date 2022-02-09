@@ -30,23 +30,12 @@
 
 namespace tlucanti
 {
-	extern std::string server_name;
-	extern std::string server_password;
-	extern std::string server_begining;
-	extern std::string server_version;
-	extern std::string server_oper_login;
-	extern std::string server_oper_password;
-	extern Database database;
-}
-
-namespace tlucanti
-{
 	#define check_format(line, ...) do \
 	{ \
 		const char *_fmt[] = {__VA_ARGS__}; \
 		std::vector<std::string> _vec(_fmt, \
 			_fmt + sizeof(_fmt) / sizeof(_fmt[0])); \
-		_check_format__macro(line, _vec); \
+		check_format__macro(line, _vec); \
 	} while (false)
 
 	class IRCParser
@@ -86,9 +75,12 @@ namespace tlucanti
 		__WUR std::string compose_nick() const;
 		__WUR std::string compose_user() const;
 		__WUR std::string compose_oper() const;
+		__WUR std::string compose_quit() const;
+
+		__WUR std::string compose_join();
 
 		static std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
-		void _check_format__macro(const arg_list_type &_line, arg_list_type &_fmt);
+		void check_format__macro(const arg_list_type &_line, arg_list_type &_fmt);
 		__WUR bool contains_only(const std::string &str, const std::string &format);
 
 		static const char *PRINTABLE;

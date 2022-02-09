@@ -18,6 +18,14 @@ tlucanti::Database::~Database()
 		delete it->second;
 }
 
+tlucanti::Channel *
+tlucanti::Database::add_channel(const std::string &name)
+{
+	Channel *new_chan = new Channel(name);
+	channels[name] = new_chan;
+	return new_chan;
+}
+
 void
 tlucanti::Database::add_client(const Socket &sock)
 {

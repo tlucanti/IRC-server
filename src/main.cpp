@@ -21,14 +21,21 @@ namespace tlucanti
 	const tlucanti::color cout;
 	tlucanti::Database database;
 
-	std::string server_name;
+	const char *server_name = "__TLUCANTI__";
+	const char *server_address = "0.0.0.0";
+	const char *server_version = "1.0";
+	const char *server_oper_login = "tlucanti";
+	const char *server_oper_password = "oper";
+
 	std::string server_password;
-	std::string server_address;
 	std::string server_begining;
-	std::string server_version;
-	std::string server_oper_login;
-	std::string server_oper_password;
 	unsigned short server_port;
+
+	const unsigned int channel_max_users = 500;
+	const unsigned int chanel_max_name_len = 50;
+	const unsigned int channel_max_topic_len = 300;
+	const unsigned int user_max_channels = 32;
+	const unsigned int user_max_nick_len = 20;
 
 	namespace IRC
 	{
@@ -52,13 +59,8 @@ void check_args(int argc, const char **argv)
 			"type --help for more information");
 	else
 	{
-		tlucanti::server_name = "__TLUCANTI_SERVER__";
 		tlucanti::server_password = argv[2];
-		tlucanti::server_address = "0.0.0.0";
 		tlucanti::server_begining = tlucanti::get_current_time();
-		tlucanti::server_version = "1.0";
-		tlucanti::server_oper_login = "tlucanti";
-		tlucanti::server_oper_password = "oper";
 		tlucanti::server_port = atoi(argv[1]); // make normal string -> int
 	}
 }
