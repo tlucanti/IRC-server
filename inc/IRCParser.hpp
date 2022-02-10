@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 14:20:18 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/08 11:08:09 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/10 19:13:23 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,10 +64,12 @@ namespace tlucanti
 		std::string realname;
 		std::string message;
 		std::string channel;
+		std::string mode;
+		std::string target;
 		arg_list_type chan_list;
 		arg_list_type user_list;
 		arg_list_type pass_list;
-		bool has_suffix;
+		int has_suffix;
 		User *user;
 
 		__WUR std::string compose_cap() const;
@@ -78,6 +80,7 @@ namespace tlucanti
 		__WUR std::string compose_quit() const;
 
 		__WUR std::string compose_join();
+		__WUR std::string compose_mode();
 
 		static std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
 		void check_format__macro(const arg_list_type &_line, arg_list_type &_fmt);

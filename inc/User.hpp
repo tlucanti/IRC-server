@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 17:49:10 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/08 18:31:26 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/10 22:45:09 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 # include <vector>
 # include <list>
 # include <unordered_set>
+
+# include "ITarget.hpp"
 
 # include "defs.h"
 # include "IRCParserException.hpp"
@@ -29,7 +31,7 @@ namespace tlucanti
 {
 	struct Channel;
 
-	struct User
+	struct User : public ITarget
 	{
 	public:
 		User(int sock) noexcept;
@@ -37,21 +39,22 @@ namespace tlucanti
 
 		__WUR inline int get_sock() const { return sock_fd; }
 
-		void send_message(const std::string &message) const;
+		void send_message(const std::string &message) const override;
 		void send_to_chanels(const std::string &message) const;
 
 		void add_channel(Channel &channel);
 		void remove_channel(Channel &channel);
 
-		void assert_mode(const std::string &mode) const;
-		__WUR bool has_mode(const std::string &mode) const;
-		void make_mode(const std::string &mode);
+		void assert_mode(const std::string &mode) const override;
+		__WUR bool has_mode(const std::string &mode) const override;
+		void make_mode(const std::string &mode) override;
+		__WUR std::string get_modes() const override;
 
 		void make_nickname(const std::string &nickname);
 		void make_user(const std::string &nickname, const std::string &hostname,
 			const std::string &servername, const std::string &realname);
 
-		__WUR inline const std::string &get_nickname() const { return _nickname; }
+		__WUR const std::string &get_name() const override { return _nickname; }
 		__WUR std::string compose() const;
 
 		static const char *modes;
@@ -61,10 +64,11 @@ namespace tlucanti
 		int			sock_fd;		// new socked appeared
 		struct Modes
 		{
-			bool		pass;		// PASS command recived
-			bool		nick;		// NICK command recived
-			bool		reg;		// USER + NICK + PASS received
-			bool		oper;
+			bool		pass;		// PASS command received
+			bool		nick;		// NICK command received
+			bool		reg;		// (r) flag, USER + NICK + PASS received
+			bool		oper;		// (o) operator flag
+			bool		inv;		// (i) invisible flag
 		} _modes;
 
 		std::string	_nickname;

@@ -4,12 +4,12 @@ project(irc)
 set(CMAKE_CXX_STANDARD 23)
 
 add_executable(irc
-	inc/SocketException.hpp
 	inc/defs.h
 	inc/IRCException.hpp
 	inc/ServerException.hpp
 	inc/Server.hpp
 	inc/Database.hpp
+	inc/ITarget.hpp
 	inc/User.hpp
 	inc/Socket.hpp
 	inc/Channel.hpp

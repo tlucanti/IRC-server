@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 09:35:33 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/09 15:42:23 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/10 20:15:34 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,13 +41,13 @@ tlucanti::IRCParser::compose_nick() const
 	{
 		if (user->has_mode("nick+"))
 			return IRC::ERR_NICKNAMEINUSE('*', nickname);
-		return IRC::ERR_NICKNAMEINUSE(user, nickname);
+		return IRC::ERR_NICKNAMEINUSE(*user, nickname);
 	}
 	if (user->has_mode("nick+"))
 	{
-		std::string old = user->get_nickname();
+		std::string old = user->get_name();
 		user->make_nickname(nickname);
-		return IRC::compose_message(nullptr, "NOTICE", user, old + " is now known as " + nickname);
+		return IRC::compose_message(nullptr, "NOTICE", *user, old + " is now known as " + nickname);
 	}
 	user->make_nickname(nickname);
 	return "";
@@ -114,12 +114,12 @@ tlucanti::IRCParser::compose_join()
 		Channel *chan = database.get_channel(*chan_i);
 		if (chan == nullptr)
 		{
-			user->assert_mode("full-");
+			if (user->has_mode("full+"))
+				return IRC::ERR_TOOMANYCHANNELS(*user, chan);
 			chan = database.add_channel(*chan_i);
 			chan->add_user(*user);
 			chan->add_oper(*user);
 			user->add_channel(*chan);
-			continue ;
 		}
 		else if (chan->has_mode("k+"))
 		{
@@ -129,20 +129,70 @@ tlucanti::IRCParser::compose_join()
 				continue ;
 			}
 		}
-		if (user->has_mode("full+"))
-			return IRC::ERR_TOOMANYCHANNELS(*user, *chan);
-		if (chan->has_mode("full+"))
-			return IRC::ERR_CHANNELISFULL(*user, *chan);
-		chan->assert_mode("full-");
-		chan->add_user(*user);
-		user->add_channel(*chan);
-		chan->send_message(IRC::compose_message(*user, "JOIN", "", chan->get_name(), false));
-		IRCParser(":" + user->get_nickname() + ' ' + chan->get_name()).exec(user->get_sock());
+		else
+		{
+			if (user->has_mode("full+"))
+				return IRC::ERR_TOOMANYCHANNELS(*user, *chan);
+			if (chan->has_mode("full+"))
+				user->send_message(IRC::ERR_CHANNELISFULL(*user, *chan));
+			chan->add_user(*user);
+			user->add_channel(*chan);
+		}
+
+		std::cout << chan->get_users().size() << " users in channel " << chan->get_name() << "\n";
+		chan->send_message(IRC::compose_message(user->compose(), "JOIN", "", chan->get_name(), false));
+//		IRCParser(":" + user->get_nickname() + " TOPIC " + chan->get_name()).exec(user->get_sock());
 
 		Channel::user_container_type users = chan->get_users();
-		int enough = 0;
 		std::string content;
-		user->send_message(IRC::RPL_NAMREPLY(*user, '=', *chan, chan->get_users()));
-		user->send_message(IRC::RPL_ENDOFNAMES(*user, *chan));
+//		user->send_message(IRC::RPL_NAMREPLY(*user, '=', *chan, chan->get_users()));
+//		user->send_message(IRC::RPL_ENDOFNAMES(*user, *chan));
 	}
+	return "";
+}
+
+std::string
+tlucanti::IRCParser::compose_mode()
+{
+	ITarget *tar;
+	if (target.at(0) == '#' or target.at(0) == '&')
+	{
+		tar = database.get_channel(target);
+		if (tar == nullptr)
+			return IRC::ERR_NOSUCHNICK(*user, target, "channel with name");
+	}
+	else
+	{
+		tar = database[target];
+		if (tar == nullptr)
+			return IRC::ERR_NOSUCHNICK(*user, target, "user with nickname");
+		if (user != tar)
+			return IRC::ERR_USERSDONTMATCH(*user);
+	}
+	if (mode.size() > 2)
+		return IRC::compose_message(nullptr, "MODE", *user, "you can change only "
+			"one mode per command");
+
+	if (has_suffix == 0)
+		return IRC::RPL_UMODEIS(*user, user->get_modes());
+	if (has_suffix == 1)
+	{
+		std::reverse(mode.begin(), mode.end());
+		if (target.at(0) == '#' or target.at(0) == '&')
+		{
+			return "";
+		}
+		else
+		{
+			if (mode == "i+" or mode == "i-" or mode == "o-")
+				user->make_mode(mode);
+			else if (mode == "o+")
+				return "";
+			else
+				return IRC::ERR_UMODEUNKNOWNFLAG(*user, mode);
+		}
+	}
+	else
+		return "";
+	return "";
 }

@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 10:35:49 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/08 23:21:10 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/10 19:12:42 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,16 +101,15 @@ tlucanti::IRCParser::parse()
 		check_format(line, "[:nick]", "cmd", "chan_list", "[pass_list]");
 	else if (command == "PART")
 		check_format(line, "[:nick]", "cmd", "chan_list");
-	else if (command == "MODE")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement mode command");
 	else if (command == "TOPIC")
 	{
-		check_format(line, "[:nick]", "cmd", "chan", ":msg");
+		check_format(line, "[:nick]", "cmd", "chan", "[:msg]");
 		int add = 0;
 		if (not prefix.empty())
 			++add;
 		channel = line.at(1 + add);
-		message = line.at(2 + add);
+		if (has_suffix)
+			message = line.at(2 + add);
 	}
 	else if (command == "NAMES")
 		check_format(line, "[:nick]", "cmd", "[chan_list]");
@@ -136,12 +135,28 @@ tlucanti::IRCParser::parse()
 		if (has_suffix)
 			message = line.at(3 + add);
 	}
+	else if (command == "MOTD")
+		throw IRCException("[tlucanti::IRCParser::parse]", "implement motd command");
 	else if (command == "VERSION")
 		throw IRCException("[tlucanti::IRCParser::parse]", "implement version command");
-	else if (command == "TIME")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement time command");
+	else if (command == "ADMIN")
+		throw IRCException("[tlucanti::IRCParser::parse]", "implement admin command");
+	else if (command == "HELP")
+		throw IRCException("[tlucanti::IRCParser::parse]", "implement admin command");
 	else if (command == "INFO")
 		throw IRCException("[tlucanti::IRCParser::parse]", "implement info command");
+	else if (command == "MODE")
+	{
+		check_format(line, "[:nick]", "cmd", "target", "[str]", "[str]");
+		int add = 0;
+		if (not prefix.empty())
+			++add;
+		target = line.at(1 + add);
+		if (has_suffix >= 1)
+			mode = line.at(2 + add);
+		if (has_suffix >= 2)
+			message = line.at(3 + add);
+	}
 	else if (command == "PRIVMSG")
 	{
 		check_format(line, "[:nick]", "cmd", "receiver_list", ":msg");
@@ -160,6 +175,8 @@ tlucanti::IRCParser::parse()
 	}
 	else if (command == "RESTART")
 		throw IRCException("[tlucanti::IRCParser::parse]", "implement restart command");
+	else if (command == "TIME")
+		throw IRCException("[tlucanti::IRCParser::parse]", "implement time command");
 	else
 		throw IRCParserException(IRC::ERR_UNKNOWNCOMMAND(*user, command));
 }
@@ -200,12 +217,10 @@ tlucanti::IRCParser::exec(const Socket &client)
 
 	}
 	else if (command == "MODE")
-	{
-
-	}
+		return compose_mode();
 	else if (command == "TOPIC")
 	{
-
+		return "should be topic response";
 	}
 	else if (command == "NAMES")
 	{
@@ -309,7 +324,7 @@ tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_ty
 	arg_list_type::iterator format_i = format.begin();
 	arg_list_type::const_iterator line_i = _line.begin();
 
-	while (format_i != format.end())
+	for (;format_i != format.end(); ++format_i, ++line_i)
 	{
 		if (line_i == _line.end())
 		{
@@ -329,6 +344,8 @@ tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_ty
 				throw IRCParserException(IRC::ERR_NORECIPIENT(*user, "expected channel or user list"));
 			else if (format_i->at(0) != '[')
 				throw IRCException("[tlucanti::IRCParser::_check_format__macro]", "tlucanti::IRCParser::_check_format__macro (invalid format specifier)", *format_i);
+			else
+				break ;
 		}
 		if (*format_i == "cmd") {}
 		else if (*format_i == "pass")
@@ -344,7 +361,6 @@ tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_ty
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted nickname, not message suffix"));
 			if (not contains_only(*line_i, IRCParser::NICKNAME))
 				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "nickname can contain only digits, letters or special symbols -[]\\`^{}\n"));
- // nickname can contain only digits, letters or special symbols -[]\`^{}
 		}
 		else if (*format_i == "chan")
 		{
@@ -380,30 +396,36 @@ tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_ty
 			{
 				arg_list_type split_elem;
 				split_elem.push_back(*it);
-				if (it->at(0) == '#' or it->at(0) == '&')
-				{
-					check_format(split_elem, "chan");
-					chan_list.push_back(*it);
-				}
-				else
-				{
-					check_format(split_elem, "nick");
-					user_list.push_back(*it);
-				}
+				check_format(line, "target");
 			}
 		}
-		else if (*format_i == "[:nick]" and line_i != _line.end())
+		else if (*format_i == "target")
+		{
+			arg_list_type split_elem;
+			split_elem.push_back(*line_i);
+			if (line_i->at(0) == '#' or line_i->at(0) == '&')
+			{
+				check_format(split_elem, "chan");
+				chan_list.push_back(*line_i);
+			}
+			else
+			{
+				check_format(split_elem, "nick");
+				user_list.push_back(*line_i);
+			}
+		}
+		else if (*format_i == "[:nick]")
 		{
 			if (line_i->at(0) != ':')
 			{
-				++format_i;
+				--line_i;
 				continue ;
 			}
 			arg_list_type check;
 			check.push_back((*line_i).substr(1));
 			check_format(check, "nick");
 		}
-		else if (*format_i == "[pass_list]" and line_i != _line.end())
+		else if (*format_i == "[pass_list]")
 		{
 			arg_list_type split_list;
 			split(*line_i, split_list, ',');
@@ -415,26 +437,28 @@ tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_ty
 				pass_list.push_back(*it);
 			}
 		}
-		else if (*format_i == "[chan_list]" and line_i != _line.end())
+		else if (*format_i == "[chan_list]")
 		{
 			arg_list_type check;
 			check.push_back((*line_i).substr(1));
 			check_format(check, "chan_list");
 		}
-		else if (*format_i == "[:msg]" and line_i != _line.end())
+		else if (*format_i == "[:msg]")
 		{
 			has_suffix = true;
 			arg_list_type check;
 			check.push_back(*line_i);
 			check_format(check, ":msg");
 		}
-		else
-			throw IRCException("[tlucanti::IRCParser::_check_format__macro]", "tlucanti::IRCParser::_check_format__macro (invalid format specifier)", *format_i);
-		++format_i;
-		++line_i;
+		else if (*format_i == "[str]")
+		{
+			++has_suffix;
+		}
+		else if ((*format_i).at(0) != '[')
+			throw IRCException("[tlucanti::IRCParser::_check_format__macro]", "(invalid format specifier)", *format_i);
 	}
 	if (line_i != _line.end())
-		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command"));
+		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command: " + *line_i));
 }
 
 __WUR bool

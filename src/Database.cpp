@@ -38,7 +38,7 @@ tlucanti::Database::remove_client(Socket &sock)
 {
 	User *cli = fd_access[sock.get_sock()];
 	fd_access.erase(sock.get_sock());
-	str_access.erase(cli->get_nickname());
+	str_access.erase(cli->get_name());
 	delete cli;
 	sock.close();
 }

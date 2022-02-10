@@ -68,8 +68,6 @@
 > #### responses:
 > None
 
-### ERROR
-
 ### \[:USERNAME\] JOIN \#CHANNEL1\[,&CHANNEL2 \[...\]\] \[KEY1\[,KEY2\] \[...\]\]
 > join to channels named by comas using keys (if provided), if channel is not
 > exist - creates channel and makes current user operator of new channel

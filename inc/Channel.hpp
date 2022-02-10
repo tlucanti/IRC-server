@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 17:29:25 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/06 17:43:08 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/10 20:34:22 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,34 +17,38 @@
 # include <list>
 # include <set>
 
+# include "ITarget.hpp"
+
 # include "defs.h"
-# include "User.hpp"
+# include "IRCException.hpp"
 # include "IRCParserException.hpp"
 
 namespace tlucanti
 {
-	struct User;
+	extern const unsigned int channel_max_users;
 
-	struct Channel
+	struct Channel : public ITarget
 	{
 		Channel(const std::string &name);
 
-		typedef std::set<int> user_container_type;
-		typedef std::set<int> oper_conrainer_type;
+		typedef std::list<ITarget *> user_container_type;
+		typedef std::list<ITarget *> oper_conrainer_type;
 
-		inline void add_user(const User &new_user);
-		inline void add_oper(const User &new_oper);
-		inline void remove_user(const User &del_user);
-		inline void remove_oper(const User &del_oper);
+		void add_user(const ITarget &new_user);
+		void add_oper(const ITarget &new_oper);
+		void remove_user(const ITarget &del_user);
+		void remove_oper(const ITarget &del_oper);
 
-		void assert_mode(const std::string &mode) const;
-		bool has_mode(const std::string &mode) const;
+		void assert_mode(const std::string &mode) const override;
+		__WUR bool has_mode(const std::string &mode) const override;
+		void make_mode(const std::string &mode) override;
+		__WUR std::string get_modes() const override;
 		void make_pass(const std::string &pass);
-		bool check_pass(const std::string &pass) const; // ok - true, not ok - false, if server has no password - always return true
+		__WUR bool check_pass(const std::string &pass) const; // ok - true, not ok - false, if server has no password - always return true
 
-		void send_message(const std::string &message) const;
+		void send_message(const std::string &message) const override;
 
-		__WUR inline const std::string &get_name() const { return name; }
+		__WUR const std::string &get_name() const override { return name; }
 		__WUR inline const std::string &get_topic() const { return topic; }
 		__WUR inline const user_container_type &get_users() const { return users; }
 		inline void new_topic(const std::string &topic);
@@ -55,7 +59,11 @@ namespace tlucanti
 		std::string			name;
 		std::string			topic;
 		std::string			pass;
-		bool is_nil;
+
+		struct Modes
+		{
+			bool 	key;	// (k) mode (requires password)
+		} _modes;
 
 		user_container_type	users;
 		oper_conrainer_type	operators;
@@ -65,6 +73,8 @@ namespace tlucanti
 		Channel(const Channel &) __DELETE
 		Channel &operator =(const Channel &) __DELETE
 	};
+
+	std::ostream &operator <<(std::ostream &out, const Channel &chan);
 }
 
 #endif /* CHANNEL_HPP */

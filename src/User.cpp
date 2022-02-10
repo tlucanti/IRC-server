@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 12:09:27 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/09 15:59:20 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/10 22:02:00 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ tlucanti::User::make_user(const std::string &username,
 	_realname = realname;
 }
 
+__WUR
 std::string
 tlucanti::User::compose() const
 {
@@ -110,13 +111,20 @@ tlucanti::User::assert_mode(const std::string &mode) const
 	if (mode == "full-")
 	{
 		unknown = false;
+		if (channels_member.size() >= tlucanti::user_max_channels)
+			throw tlucanti::IRCParserException();
+	}
+	if (mode == "full+")
+	{
+		unknown = false;
 		if (channels_member.size() < tlucanti::user_max_channels)
-			throw tlucanti::IRCParserException(IRC::ERR_TOOMANYCHANNELS(*this, "*"));
+			throw tlucanti::IRCParserException();
 	}
 	if (unknown)
-		throw IRCException("[tlucanti::User::assert_mode__macro]", "invalid permission check flag", mode);
+		throw IRCException("[tlucanti::User::assert_mode]", "invalid user mode", mode);
 }
 
+__WUR
 bool
 tlucanti::User::has_mode(const std::string &mode) const
 {
@@ -143,15 +151,29 @@ tlucanti::User::make_mode(const std::string &mode)
 		_modes.oper = true;
 	}
 	if (unknown)
-		throw IRCException("[tlucanti::User::make_mode__macro]", "invalid permission check flag", mode);
+		throw IRCException("[tlucanti::User::make_mode__macro]", "invalid mode flag", mode);
+}
+
+__WUR
+std::string
+tlucanti::User::get_modes() const
+{
+	std::string ret = "+";
+	if (_modes.reg)
+		ret += 'r';
+	if (_modes.oper)
+		ret += 'o';
+	if (_modes.inv)
+		ret += 'i';
+	return ret;
 }
 
 std::ostream &
 tlucanti::operator <<(std::ostream &out, const tlucanti::User &usr)
 {
-	if (usr.get_nickname().empty())
+	if (usr.get_name().empty())
 		out << '*';
 	else
-		out << usr.get_nickname();
+		out << usr.get_name();
 	return out;
 }
