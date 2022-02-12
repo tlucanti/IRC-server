@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/10 18:55:53 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/10 22:47:08 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/11 10:25:35 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,18 +27,23 @@ namespace tlucanti
 		virtual void assert_mode(const std::string &mode) const = 0;
 		__WUR virtual bool has_mode(const std::string &mode) const = 0;
 		virtual void make_mode(const std::string &mode) = 0;
-		__WUR virtual const std::string &get_name() const;
+		__WUR virtual const std::string &get_name() const = 0;
 		__WUR virtual std::string get_modes() const = 0;
 
-	protected:
+	 protected:
 		ITarget() __DEFAULT
 
 	__DELETED_MEMBERS:
 		ITarget(const ITarget &) __DELETE
+		virtual ~ITarget() __DEFAULT
 		ITarget &operator =(const ITarget &) __DELETE
 	};
 
-	std::ostream &operator <<(std::ostream &out, const tlucanti::ITarget &usr);
+	inline std::ostream &operator <<(std::ostream &out, const tlucanti::ITarget &usr)
+	{
+		out << usr.get_name();
+		return out;
+	}
 }
 
 #endif /* ITARGET_HPP */

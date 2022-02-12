@@ -6,11 +6,12 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 09:35:33 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/10 20:15:34 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/11 11:35:54 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/IRCParser.hpp"
+#include "../inc/IRCrpl.hpp"
 
 namespace tlucanti
 {
@@ -141,12 +142,12 @@ tlucanti::IRCParser::compose_join()
 
 		std::cout << chan->get_users().size() << " users in channel " << chan->get_name() << "\n";
 		chan->send_message(IRC::compose_message(user->compose(), "JOIN", "", chan->get_name(), false));
-//		IRCParser(":" + user->get_nickname() + " TOPIC " + chan->get_name()).exec(user->get_sock());
+		IRCParser(":" + user->get_name() + " TOPIC " + chan->get_name()).exec(user->get_sock());
 
 		Channel::user_container_type users = chan->get_users();
 		std::string content;
-//		user->send_message(IRC::RPL_NAMREPLY(*user, '=', *chan, chan->get_users()));
-//		user->send_message(IRC::RPL_ENDOFNAMES(*user, *chan));
+		user->send_message(IRC::RPL_NAMREPLY(*user, '=', *chan, chan->get_users(), *chan));
+		user->send_message(IRC::RPL_ENDOFNAMES(*user, *chan));
 	}
 	return "";
 }
@@ -180,7 +181,11 @@ tlucanti::IRCParser::compose_mode()
 		std::reverse(mode.begin(), mode.end());
 		if (target.at(0) == '#' or target.at(0) == '&')
 		{
-			return "";
+			if (mode == "i+" or mode == "i-" or mode == "k-" or mode == "m+" or mode == "m-" or mode == "s+" or mode == "s-" or mode == "t+" or mode == "t-" or mode == "n+" or mode == "n-")
+				user->make_mode(mode);
+			else if (mode == "k+" or )
+			else if (mode == "l+")
+				return "";
 		}
 		else
 		{
@@ -195,4 +200,35 @@ tlucanti::IRCParser::compose_mode()
 	else
 		return "";
 	return "";
+}
+
+std::string
+tlucanti::IRCParser::compose_topic() const
+{
+	Channel *chan = database.get_channel(channel);
+
+	if (chan == nullptr)
+		return IRC::ERR_NOSUCHCHANNEL(*user, channel, "channel with name " +
+			channel + " does not exist");
+	if ((*chan)[*user] == nullptr)
+		return IRC::ERR_NOTONCHANNEL(*user, *chan);
+	if (not has_suffix)
+	{
+		if (chan->get_topic().empty())
+			return IRC::RPL_NOTOPIC(*user, *chan);
+		else
+		{
+			user->send_message(IRC::RPL_TOPIC(*user, *chan, chan->get_topic()));
+			user->send_message(IRC::RPL_TOPICWHOTIME(*user, *chan, chan->get_topic_author(), chan->get_topic_time()));
+			return "";
+		}
+	}
+	else
+	{
+		if (chan->has_mode("t+") and not chan->is_oper(*user))
+			return IRC::ERR_CHANOPRIVSNEEDED(*user, *chan);
+		chan->make_topic(message, *user);
+		chan->send_message(IRC::compose_message(user->compose(), "TOPIC", chan->get_name(), message));
+		return "";
+	}
 }

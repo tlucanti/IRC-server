@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 12:09:27 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/10 22:02:00 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/11 11:11:38 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,6 +120,12 @@ tlucanti::User::assert_mode(const std::string &mode) const
 		if (channels_member.size() < tlucanti::user_max_channels)
 			throw tlucanti::IRCParserException();
 	}
+	if (mode == "o+")
+	{
+		unknown = false;
+		if (not _modes.oper)
+			throw tlucanti::IRCParserException();
+	}
 	if (unknown)
 		throw IRCException("[tlucanti::User::assert_mode]", "invalid user mode", mode);
 }
@@ -151,7 +157,7 @@ tlucanti::User::make_mode(const std::string &mode)
 		_modes.oper = true;
 	}
 	if (unknown)
-		throw IRCException("[tlucanti::User::make_mode__macro]", "invalid mode flag", mode);
+		throw IRCException("[tlucanti::User::make_mode]", "invalid user mode flag", mode);
 }
 
 __WUR

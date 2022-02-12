@@ -81,6 +81,7 @@ namespace tlucanti
 
 		__WUR std::string compose_join();
 		__WUR std::string compose_mode();
+		__WUR std::string compose_topic() const;
 
 		static std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
 		void check_format__macro(const arg_list_type &_line, arg_list_type &_fmt);
@@ -96,7 +97,6 @@ namespace tlucanti
 		IRCParser() __DELETE
 		IRCParser(const IRCParser &) __DELETE
 		IRCParser &operator =(const IRCParser &) __DELETE
-
 	};
 }
 

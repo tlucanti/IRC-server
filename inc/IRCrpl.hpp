@@ -6,16 +6,17 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/10 20:55:10 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/11 18:34:18 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef IRCRPL_HPP
 # define IRCRPL_HPP
 
-#include <fstream>
+# include <fstream>
 
-#include "parser_utils.hpp"
+# include "parser_utils.hpp"
+# include "IRCcodes.h"
 
 namespace tlucanti
 {
@@ -240,9 +241,51 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
-	template <typename target_T, typename chan_T, typename list_T>
+	template <typename target_T, typename chan_T>
+	inline std::string RPL_NOTOPIC(const target_T &target,
+		const chan_T &channel)
+	/*
+		:`SERVER` 331 `NICK` `CHANNEL` :No topic is set in channel
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_NOTOPIC <<
+			' ' << target << ' ' << channel << " :No topic is set in channel" <<
+			IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename chan_T>
+	inline std::string RPL_TOPIC(const target_T &target, const chan_T &channel,
+		const std::string &topic)
+	/*
+		:`SERVER` 332 `NICK` `CHANNEL` :`TOPIC`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_TOPIC <<
+			' ' << target << ' ' << channel << " :" << topic << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename chan_T, typename author_T,
+		typename time_T>
+	inline std::string RPL_TOPICWHOTIME(const target_T &target,
+		const chan_T &channel, const author_T &author, const time_T &time)
+	/*
+		:`SERVER` 333 `NICK` `CHANNEL` `AUTHOR` `TIME`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_TOPICWHOTIME <<
+			' ' << target << ' ' << channel << ' ' << author << ' ' << time <<
+			IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename chan_T, typename list_T, typename c_T>
 	inline std::string RPL_NAMREPLY(const target_T &target, char symbol,
-		const chan_T &channel, const list_T &user_list)
+		const chan_T &channel, const list_T &user_list, const c_T &ch)
 	/*
 		:`SERVER` 353 `target` `SYM` `CHANNEL` :`USER1` `USER2` ...
 	*/
@@ -256,6 +299,7 @@ namespace tlucanti::IRC
 			start = ss.str();
 		}
 		std::stringstream ss;
+		ss << start;
 		int dec = 0;
 		for (typename list_T::const_iterator it=user_list.begin(); it != user_list.end(); ++it)
 		{
@@ -264,9 +308,15 @@ namespace tlucanti::IRC
 				ss << IRC::endl << start;
 				dec = 0;
 			}
-			ss << ' ' << (**it);
+			ss << ' ';
+			if (ch.is_oper(**it))
+				ss << '~';
+			else if (ch.is_voice(**it))
+				ss << '+';
+			ss << (**it);
 			++dec;
 		}
+		ss << IRC::endl;
 		return ss.str();
 	}
 
@@ -450,6 +500,20 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
+	template <typename target_T, typename chan_T>
+	inline std::string ERR_NOTONCHANNEL(const target_T &target,
+		const chan_T &channel)
+	/*
+		:`SERVER` 442 `NICK` `CHANNEL` :You're not on that channel
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_NOTONCHANNEL << ' ' << target << ' ' << channel <<
+			" :You're not on that channel" << IRC::endl;
+		return ss.str();
+	}
+
 	template <typename target_T>
 	inline std::string ERR_NOTREGISTERED(const target_T &target)
 	/*
@@ -513,6 +577,20 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
+	template <typename target_T, typename chan_T>
+	inline std::string ERR_CHANOPRIVSNEEDED(const target_T &target,
+		const chan_T &channel)
+	/*
+		:`SERVER` 482 `NICK` `CHANNEL` :You are need to be channel operator
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_CHANOPRIVSNEEDED << ' ' << target << ' ' << channel <<
+			" :You are need to be channel operator" << IRC::endl;
+		return ss.str();
+	}
+
 	template <typename target_T>
 	inline std::string ERR_UMODEUNKNOWNFLAG(const target_T &target,
 		const std::string &mode)
@@ -528,15 +606,15 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_USERSDONTMATCH(const target_T &target)
+	inline std::string ERR_USERSDONTMATCH(const target_T &target, const std::string &what)
 	/*
-		:`SERVER` 502 `NICK` :Can not change mode for other users
+		:`SERVER` 502 `NICK` :Can not change/see mode for other users
 	*/
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' <<
 			IRCcodes::ERR_USERSDONTMATCH << ' ' << target <<
-			" :Can not change mode for other users" << IRC::endl;
+			" :Can not " << what << " mode for other users" << IRC::endl;
 		return ss.str();
 	}
 }

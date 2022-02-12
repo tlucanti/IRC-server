@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 10:38:53 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/06 17:43:38 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/11 11:35:57 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,6 @@ tlucanti::Database::make_edge(const std::string &nickname, const Socket &sock)
 	str_access.insert({nickname, fd_access[sock.get_sock()]});
 	return false;
 }
-
 
 __WUR tlucanti::User *
 tlucanti::Database::operator [](int fd) const

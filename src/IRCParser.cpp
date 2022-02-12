@@ -219,9 +219,7 @@ tlucanti::IRCParser::exec(const Socket &client)
 	else if (command == "MODE")
 		return compose_mode();
 	else if (command == "TOPIC")
-	{
-		return "should be topic response";
-	}
+		return compose_topic();
 	else if (command == "NAMES")
 	{
 

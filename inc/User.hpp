@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 17:49:10 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/10 22:45:09 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/11 11:11:25 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ namespace tlucanti
 	{
 	public:
 		User(int sock) noexcept;
-		~User() __DEFAULT
+		~User() override __DEFAULT
 
 		__WUR inline int get_sock() const { return sock_fd; }
 
