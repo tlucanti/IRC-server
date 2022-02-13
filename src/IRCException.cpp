@@ -12,6 +12,20 @@
 
 #include "../inc/IRCException.hpp"
 
+tlucanti::IRCException::IRCException(const char *func, int line, const char *message, const std::string &arg)
+{
+	std::stringstream ss;
+	_message = func;
+	_message.erase(std::find(_message.begin(), _message.end(), '('), _message.end());
+	std::string::iterator it = --_message.end();
+	while (isalnum(*it) or *it == ':' or *it == '_')
+		--it;
+	_message.erase(_message.begin(), ++it);
+	ss << "[r][FAIL][w] [" << _message << "::" << line << "][] " << message <<
+		": [y]" << arg << "[]";
+	_message = ss.str();
+}
+
 tlucanti::IRCException::IRCException(const std::string &parent,
 	const std::string &message, int error)
 		: _parent(parent)

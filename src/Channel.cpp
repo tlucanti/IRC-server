@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 13:21:17 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/11 17:57:13 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/13 17:31:54 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ const char *tlucanti::Channel::modes = "likmstn";
 tlucanti::Channel::Channel(const std::string &name)
 		: name(name), max_users(tlucanti::channel_max_users)
 {
+	create_time = time(nullptr);
 	_modes.limit = true;
 	_modes.inv = false;
 	_modes.key = false;
@@ -91,7 +92,7 @@ tlucanti::Channel::assert_mode(const std::string &mode) const
 			throw IRCParserException();
 	}
 	if (unknown)
-		throw IRCException("[tlucanti::Channel::assert_mode]", "invalid channel mode", mode);
+		ABORT("invalid channel mode", mode);
 }
 
 __WUR
@@ -109,9 +110,34 @@ tlucanti::Channel::has_mode(const std::string &mode) const
 void
 tlucanti::Channel::make_mode(const std::string &mode)
 {
-	bool unknown = true;
-	if (unknown)
-		throw IRCException("[tlucanti::Channel::make_mode]", "invalid channel mode flag", mode);
+	if (mode == "i+")
+		_modes.inv = true;
+	else if (mode == "i-")
+		_modes.inv = false;
+	else if (mode == "k+")
+		_modes.key = true;
+	else if (mode == "k-")
+		_modes.key = false;
+	else if (mode == "m+")
+		_modes.moder = true;
+	else if (mode == "m-")
+		_modes.moder = false;
+	else if (mode == "s+")
+		_modes.secret = true;
+	else if (mode == "s-")
+		_modes.secret = false;
+	else if (mode == "t+")
+		_modes.topic = true;
+	else if (mode == "t-")
+		_modes.topic = false;
+	else if (mode == "n+")
+		_modes.next = true;
+	else if (mode == "n-")
+		_modes.next = false;
+	else if (mode == "l+")
+		return ;
+	else // unknown
+		ABORT("invalid channel mode flag", mode);
 }
 
 __WUR
@@ -119,12 +145,20 @@ std::string
 tlucanti::Channel::get_modes() const
 {
 	std::string ret;
-	if (_modes.key)
-		ret += 'k';
-	if (_modes.topic)
-		ret += 't';
 	if (_modes.limit)
 		ret += 'l';
+	if (_modes.inv)
+		ret += 'i';
+	if (_modes.key)
+		ret += 'k';
+	if (_modes.moder)
+		ret += 'm';
+	if (_modes.secret)
+		ret += 's';
+	if (_modes.topic)
+		ret += 't';
+	if (_modes.next)
+		ret += 'n';
 	if (not ret.empty())
 		ret = '+' + ret;
 	return ret;

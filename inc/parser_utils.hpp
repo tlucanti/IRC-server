@@ -216,6 +216,14 @@ namespace tlucanti
 		ret += buf;
 		return ret;
 	}
+
+	inline std::string truncate(const std::string &str, size_t maxlen=10)
+	{
+		if (str.size() <= maxlen)
+			return str;
+		else
+			return str.substr(0, maxlen - 2) + "..";
+	}
 }
 
 #endif /* PARSER_UTILS_HPP */

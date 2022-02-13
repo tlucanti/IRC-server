@@ -34,28 +34,26 @@ namespace tlucanti
 
 		Channel *add_channel(const std::string &name);
 		void add_client(const Socket &sock);
-		void remove_client(Socket &sock);
-		void remove_client(const std::string &nickname);
+		void remove_client(User &user);
 		__WUR bool make_edge(const std::string &nickname, const Socket &sock);
 
-		__WUR User *operator[](int fd) const;
 		__WUR User *operator[](const std::string &nickname) const;
 		__WUR User *operator[](const Socket &client) const;
 		__WUR Channel *get_channel(const std::string &channel) const;
 
-		__WUR inline int get_user_cnt() const { return (int)fd_access.size(); }
+		__WUR inline int get_user_cnt() const { return (int)sock_access.size(); }
 		__WUR inline int get_chan_cnt() const { return (int)channels.size(); }
 
 		int invisible_users;
 		int operators_cnt;
 		const int max_users = 500;
 	private:
-		typedef	std::unordered_map<int, User *>			fd_hashmap_type;
+		typedef	std::unordered_map<int, User *>			sock_hashmap_type;
 
-		typedef	std::unordered_map<std::string, User *>	string_hashmap_type;
+		typedef	std::unordered_map<std::string, User *>		string_hashmap_type;
 		typedef std::unordered_map<std::string, Channel *>
 				channel_container_type;
-		fd_hashmap_type			fd_access;
+		sock_hashmap_type			sock_access;
 		string_hashmap_type		str_access;
 		channel_container_type	channels;
 

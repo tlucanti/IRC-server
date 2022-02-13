@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 17:29:25 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/11 18:02:29 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/13 12:49:57 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,7 @@ namespace tlucanti
 		__WUR inline const user_container_type &get_users() const { return users; }
 		__WUR inline const std::string &get_topic_author() const { return topic_author; }
 		__WUR inline time_t get_topic_time() const { return topic_time; }
+		__WUR inline time_t get_create_time() const { return create_time; }
 
 		__WUR ITarget *operator [](const ITarget &user) const;
 		__WUR ITarget *operator [](const std::string &user) const;
@@ -72,6 +73,7 @@ namespace tlucanti
 		std::string			pass;
 		std::string 		topic_author;
 		time_t				topic_time;
+		time_t 				create_time;
 		unsigned int		max_users;
 
 		struct Modes

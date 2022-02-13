@@ -13,17 +13,21 @@
 #ifndef IRC_EXCEPTION_HPP
 # define IRC_EXCEPTION_HPP
 
-#include <stdexcept>
-#include <cstring>
-#include <string>
+# include <stdexcept>
+# include <cstring>
+# include <string>
+# include <sstream>
 
-#include "defs.h"
+# include "defs.h"
+
+# define ABORT(msg, arg) throw tlucanti::IRCException(__PRETTY_FUNCTION__, __LINE__, msg, arg)
 
 namespace tlucanti
 {
 	class IRCException : public std::exception
 	{
 	public:
+		IRCException(const char *func, int line, const char *message, const std::string &arg);
 		IRCException(const std::string &parent,
 			const std::string &message, int error);
 		IRCException(const std::string &parent,

@@ -78,8 +78,6 @@ tlucanti::IRCParser::parse()
 		if (not prefix.empty())
 			++add;
 		nickname = line.at(1 + add);
-		hostname = line.at(2 + add);
-		servername = line.at(3 + add);
 		realname = line.at(4 + add);
 	}
 	else if (command == "OPER")
@@ -157,6 +155,11 @@ tlucanti::IRCParser::parse()
 		if (has_suffix >= 2)
 			message = line.at(3 + add);
 	}
+	else if (command == "WHO")
+	{
+		check_format(line, "cmd", "target");
+		target = line.at(1);
+	}
 	else if (command == "PRIVMSG")
 	{
 		check_format(line, "[:nick]", "cmd", "receiver_list", ":msg");
@@ -207,9 +210,7 @@ tlucanti::IRCParser::exec(const Socket &client)
 	else if (command == "OPER")
 		return compose_oper();
 	else if (command == "QUIT")
-	{
-
-	}
+		return compose_quit();
 	else if (command == "JOIN")
 		return compose_join();
 	else if (command == "PART")
@@ -248,38 +249,21 @@ tlucanti::IRCParser::exec(const Socket &client)
 	{
 
 	}
+	else if (command == "WHO")
+		return compose_who();
 	else if (command == "PRIVMSG")
-	{
-		user->assert_mode("reg+");
-		for (arg_list_type::iterator it=user_list.begin();
-			it != user_list.end(); ++it)
-		{
-			User *cli = database[*it];
-			if (cli == nullptr)
-				throw IRCParserException(IRC::ERR_NOSUCHNICK(*user, *it, "user with nickname"));
-			cli->send_message(IRC::RPL_AWAY(*user, *cli, message));
-		}
-		for (arg_list_type::iterator it=chan_list.begin();
-			it != chan_list.end(); ++it)
-		{
-			Channel *chan = database.get_channel(*it);
-			if (chan == nullptr)
-				throw IRCParserException(IRC::ERR_NOSUCHNICK(*user, *it, "channel with name"));
-			chan->send_message(message);
-		}
-		return "";
-	}
+		return compose_privmsg();
 	else if (command == "KILL")
 	{
 
 	}
 	else if (command == "PING")
 	{
-		return "";
+
 	}
 	else if (command == "PONG")
 	{
-		return "";
+
 	}
 	else if (command == "RESTART")
 	{
@@ -317,10 +301,10 @@ tlucanti::IRCParser::split_string(const std::string &str, arg_list_type &out)
 }
 
 void
-tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_type &format)
+tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &format)
 {
 	arg_list_type::iterator format_i = format.begin();
-	arg_list_type::const_iterator line_i = _line.begin();
+	arg_list_type::iterator line_i = _line.begin();
 
 	for (;format_i != format.end(); ++format_i, ++line_i)
 	{
@@ -341,7 +325,7 @@ tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_ty
 			else if (*format_i == "receiver_list")
 				throw IRCParserException(IRC::ERR_NORECIPIENT(*user, "expected channel or user list"));
 			else if (format_i->at(0) != '[')
-				throw IRCException("[tlucanti::IRCParser::_check_format__macro]", "tlucanti::IRCParser::_check_format__macro (invalid format specifier)", *format_i);
+				ABORT("invalid format specifier", *format_i);
 			else
 				break ;
 		}
@@ -373,6 +357,8 @@ tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_ty
 		{
 			if (not contains_only(*line_i, IRCParser::PRINTABLESPACE))
 				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message can contain only printable characters"));
+			if (line_i->at(0) == ':')
+				line_i->erase(0, 1);
 		}
 		else if (*format_i == "chan_list")
 		{
@@ -420,7 +406,8 @@ tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_ty
 				continue ;
 			}
 			arg_list_type check;
-			check.push_back((*line_i).substr(1));
+			line_i->erase(0, 1);
+			check.push_back(*line_i);
 			check_format(check, "nick");
 		}
 		else if (*format_i == "[pass_list]")
@@ -453,7 +440,7 @@ tlucanti::IRCParser::check_format__macro(const arg_list_type &_line, arg_list_ty
 			++has_suffix;
 		}
 		else if ((*format_i).at(0) != '[')
-			throw IRCException("[tlucanti::IRCParser::_check_format__macro]", "(invalid format specifier)", *format_i);
+			ABORT("specifier", *format_i);
 	}
 	if (line_i != _line.end())
 		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command: " + *line_i));

@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 10:38:53 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/11 11:35:57 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/13 12:49:52 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,8 @@
 
 tlucanti::Database::~Database()
 {
-	for (fd_hashmap_type::iterator it=fd_access.begin(); it != fd_access.end(); ++it)
+	sock_hashmap_type::iterator it=sock_access.begin();
+	for (; it != sock_access.end(); ++it)
 		delete it->second;
 }
 
@@ -27,20 +28,29 @@ tlucanti::Database::add_channel(const std::string &name)
 }
 
 void
-tlucanti::Database::add_client(const Socket &sock)
+tlucanti::Database::add_client(const Socket &_sock)
 {
-	User *new_user = new User(sock.get_sock());
-	fd_access.insert({sock.get_sock(), new_user});
+	User *new_user = new User(_sock);
+	std::pair<int, User *> add(_sock.get_sock(), new_user);
+	sock_access.insert(add);
 }
 
 void
-tlucanti::Database::remove_client(Socket &sock)
+tlucanti::Database::remove_client(User &user)
 {
-	User *cli = fd_access[sock.get_sock()];
-	fd_access.erase(sock.get_sock());
-	str_access.erase(cli->get_name());
-	delete cli;
-	sock.close();
+	sock_access.erase(user.get_sock().get_sock());
+	str_access.erase(user.get_name());
+	const_cast<Socket &>(user.get_sock()).close();
+	const User::channels_list user_channels = user.get_channels();
+	User::channels_list::iterator it = user_channels.begin();
+	for (; it != user_channels.end(); ++it)
+	{
+		user.remove_channel(**it);
+		(*it)->remove_oper(user);
+		(*it)->remove_voice(user);
+		(*it)->remove_user(user);
+	}
+	delete (&user);
 }
 
 __WUR bool
@@ -48,17 +58,8 @@ tlucanti::Database::make_edge(const std::string &nickname, const Socket &sock)
 {
 	if (str_access.find(nickname) != str_access.end())
 		return true;
-	str_access.insert({nickname, fd_access[sock.get_sock()]});
+	str_access.insert({nickname, sock_access[sock.get_sock()]});
 	return false;
-}
-
-__WUR tlucanti::User *
-tlucanti::Database::operator [](int fd) const
-{
-	fd_hashmap_type::const_iterator it = fd_access.find(fd);
-	if (it == fd_access.end())
-		return nullptr;
-	return it->second;
 }
 
 __WUR tlucanti::User *
@@ -73,7 +74,10 @@ tlucanti::Database::operator [](const std::string &nickname) const
 __WUR tlucanti::User *
 tlucanti::Database::operator [](const Socket &client) const
 {
-	return (*this)[client.get_sock()];
+	sock_hashmap_type::const_iterator it = sock_access.find(client.get_sock());
+	if (it == sock_access.end())
+		return nullptr;
+	return it->second;
 }
 
 __WUR tlucanti::Channel *

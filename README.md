@@ -196,6 +196,8 @@
 ### PRIVMSG USERNAME MESSAGE
 > send private message `MESSAGE` to user `USERNAME`
 
+### WHO TARGET
+> 
 
 ### KILL USERNAME REASON
 > send message `REASON` to user `USERNAME` and breaks connection with him, user

@@ -7,7 +7,6 @@
 - clang tidy
 - c++98 compile
 - reformat tlucanti::IRCParser::parse and remove if/else
-- write all commands in README.md
 - make invalid port checker in argv
 - make checker for server compats (32 channels per user, max channel len = 50,
 	max nick len = 20, max topic len = 300)
@@ -16,6 +15,8 @@
 
 ### NOW
 
+- write all commands in README.md
+- fix WHO command realname
 - add all commands from README.md
 
 ### DONE

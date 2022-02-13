@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 12:09:27 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/11 11:11:38 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/13 17:32:47 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,8 @@
 
 const char *tlucanti::User::modes = "iswo";
 
-tlucanti::User::User(int sock) noexcept
-		: sock_fd(sock)
+tlucanti::User::User(const Socket &_sock) noexcept
+		: sock(_sock), _modes {}
 {
 	_modes.pass = false;
 	_modes.nick = false;
@@ -31,14 +31,10 @@ tlucanti::User::make_nickname(const std::string &nickname)
 }
 
 void
-tlucanti::User::make_user(const std::string &username,
-	const std::string &hostname, const std::string &servername,
-	const std::string &realname)
+tlucanti::User::make_user(const std::string &username, const std::string &realname)
 {
 	_modes.reg = true;
 	_username = username;
-	_hostname = hostname;
-	_servername = servername;
 	_realname = realname;
 }
 
@@ -52,13 +48,14 @@ tlucanti::User::compose() const
 void
 tlucanti::User::send_message(const std::string &message) const
 {
-	Socket(sock_fd).send(message);
+	sock.send(message);
 }
 
 void
 tlucanti::User::send_to_chanels(const std::string &message) const
 {
-	for (channels_list::iterator it=channels_member.begin(); it != channels_member.end(); ++it)
+	channels_list::iterator it=channels_member.begin();
+	for (; it != channels_member.end(); ++it)
 		(*it)->send_message(message);
 }
 
@@ -127,7 +124,7 @@ tlucanti::User::assert_mode(const std::string &mode) const
 			throw tlucanti::IRCParserException();
 	}
 	if (unknown)
-		throw IRCException("[tlucanti::User::assert_mode]", "invalid user mode", mode);
+		ABORT("invalid user mode", mode);
 }
 
 __WUR
@@ -157,7 +154,7 @@ tlucanti::User::make_mode(const std::string &mode)
 		_modes.oper = true;
 	}
 	if (unknown)
-		throw IRCException("[tlucanti::User::make_mode]", "invalid user mode flag", mode);
+		ABORT("invalid user mode flag", mode);
 }
 
 __WUR

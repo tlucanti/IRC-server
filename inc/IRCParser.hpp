@@ -59,8 +59,6 @@ namespace tlucanti
 
 		std::string nickname;
 		std::string password;
-		std::string hostname;
-		std::string servername;
 		std::string realname;
 		std::string message;
 		std::string channel;
@@ -77,14 +75,15 @@ namespace tlucanti
 		__WUR std::string compose_nick() const;
 		__WUR std::string compose_user() const;
 		__WUR std::string compose_oper() const;
-		__WUR std::string compose_quit() const;
-
+		__WUR std::string compose_quit();
+		__WUR std::string compose_who() const;
 		__WUR std::string compose_join();
+		__WUR std::string compose_privmsg() const;
 		__WUR std::string compose_mode();
 		__WUR std::string compose_topic() const;
 
 		static std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
-		void check_format__macro(const arg_list_type &_line, arg_list_type &_fmt);
+		void check_format__macro(arg_list_type &_line, arg_list_type &_fmt);
 		__WUR bool contains_only(const std::string &str, const std::string &format);
 
 		static const char *PRINTABLE;
