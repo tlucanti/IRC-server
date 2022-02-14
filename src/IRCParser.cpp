@@ -145,15 +145,13 @@ tlucanti::IRCParser::parse()
 		throw IRCException("[tlucanti::IRCParser::parse]", "implement info command");
 	else if (command == "MODE")
 	{
-		check_format(line, "[:nick]", "cmd", "target", "[str]", "[str]");
+		check_format(line, "[:nick]", "cmd", "target", "[str]", "[mode_list]");
 		int add = 0;
 		if (not prefix.empty())
 			++add;
 		target = line.at(1 + add);
 		if (has_suffix >= 1)
 			mode = line.at(2 + add);
-		if (has_suffix >= 2)
-			message = line.at(3 + add);
 	}
 	else if (command == "WHO")
 	{
@@ -428,10 +426,17 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			check.push_back((*line_i).substr(1));
 			check_format(check, "chan_list");
 		}
+		else if (*format_i == "[mode_list]")
+		{
+			while (line_i != _line.end())
+				modes_list.push_back(*line_i++);
+			--line_i;
+		}
 		else if (*format_i == "[:msg]")
 		{
 			has_suffix = true;
 			arg_list_type check;
+			line_i->erase(0, 1);
 			check.push_back(*line_i);
 			check_format(check, ":msg");
 		}

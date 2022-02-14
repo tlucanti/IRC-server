@@ -67,6 +67,7 @@ namespace tlucanti
 		arg_list_type chan_list;
 		arg_list_type user_list;
 		arg_list_type pass_list;
+		arg_list_type modes_list;
 		int has_suffix;
 		User *user;
 
@@ -79,6 +80,7 @@ namespace tlucanti
 		__WUR std::string compose_who() const;
 		__WUR std::string compose_join();
 		__WUR std::string compose_privmsg() const;
+		__WUR std::string compose_mode_single();
 		__WUR std::string compose_mode();
 		__WUR std::string compose_topic() const;
 

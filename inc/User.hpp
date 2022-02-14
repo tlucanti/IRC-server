@@ -16,7 +16,7 @@
 # include <string>
 # include <vector>
 # include <list>
-# include <unordered_set>
+# include <set>
 
 # include "ITarget.hpp"
 
@@ -34,7 +34,7 @@ namespace tlucanti
 	struct User : public ITarget
 	{
 	public:
-		typedef std::unordered_set<Channel *> channels_list;
+		typedef std::set<Channel *> channels_list;
 
 		explicit User(const Socket &sock) noexcept;
 		~User() override __DEFAULT
@@ -47,7 +47,7 @@ namespace tlucanti
 		void add_channel(Channel &channel);
 		void remove_channel(Channel &channel);
 
-		void assert_mode(const std::string &mode) const override;
+		void assert_mode(const std::string &mode) const;
 		__WUR bool has_mode(const std::string &mode) const override;
 		void make_mode(const std::string &mode) override;
 		__WUR std::string get_modes() const override;

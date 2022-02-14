@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 13:21:17 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/13 17:31:54 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/14 10:37:25 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,12 @@ tlucanti::Channel::add_voice(const ITarget &new_voice)
 }
 
 void
+tlucanti::Channel::add_banned(const ITarget &new_ban)
+{
+	banned.insert(const_cast<ITarget *>(&new_ban));
+}
+
+void
 tlucanti::Channel::remove_user(const ITarget &del_user)
 {
 	users.remove(const_cast<ITarget *>(&del_user));
@@ -54,57 +60,55 @@ tlucanti::Channel::remove_user(const ITarget &del_user)
 void
 tlucanti::Channel::remove_oper(const ITarget &del_oper)
 {
-	users.remove(const_cast<ITarget *>(&del_oper));
+	operators.erase(const_cast<ITarget *>(&del_oper));
 }
 
 void
 tlucanti::Channel::remove_voice(const ITarget &del_voive)
 {
-	users.remove(const_cast<ITarget *>(&del_voive));
+	voices.erase(const_cast<ITarget *>(&del_voive));
 }
 
 void
-tlucanti::Channel::assert_mode(const std::string &mode) const
+tlucanti::Channel::remove_banned(const ITarget &del_ban)
 {
-	bool unknown = true;
-	if (mode == "full+")
-	{
-		unknown = false;
-		if (users.size() < max_users)
-			throw IRCParserException();
-	}
-	if (mode == "full-")
-	{
-		unknown = false;
-		if (users.size() >= max_users)
-			throw IRCParserException();
-	}
-	if (mode == "k+")
-	{
-		unknown = false;
-		if (not _modes.key)
-			throw IRCParserException();
-	}
-	if (mode == "t+")
-	{
-		unknown = false;
-		if (not _modes.topic)
-			throw IRCParserException();
-	}
-	if (unknown)
-		ABORT("invalid channel mode", mode);
+	banned.erase(const_cast<ITarget *>(&del_ban));
 }
 
 __WUR
 bool
 tlucanti::Channel::has_mode(const std::string &mode) const
 {
-	try {
-		assert_mode(mode);
-		return true;
-	} catch (IRCParserException &exc) {
-		return false;
-	}
+	if (mode == "full+")
+		return users.size() >= max_users;
+	else if (mode == "full-")
+		return  users.size() < max_users;
+	else if (mode == "i+")
+		return _modes.inv;
+	else if (mode == "i-")
+		return not _modes.inv;
+	else if (mode == "k+")
+		return _modes.key;
+	else if (mode == "k-")
+		return not _modes.key;
+	else if (mode == "m+")
+		return _modes.moder;
+	else if (mode == "m-")
+		return not _modes.moder;
+	else if (mode == "s+")
+		return _modes.secret;
+	else if (mode == "s-")
+		return not _modes.secret;
+	else if (mode == "t+")
+		return _modes.topic;
+	else if (mode == "t-")
+		return not _modes.topic;
+	else if (mode == "n+")
+		return _modes.next;
+	else if (mode == "n-")
+		return not _modes.next;
+	else
+		ABORT("invalid channel mode", mode);
 }
 
 void
@@ -193,6 +197,15 @@ bool
 tlucanti::Channel::is_voice(const ITarget &target) const
 {
 	if (voices.find(const_cast<ITarget *>(&target)) == voices.end())
+		return false;
+	return true;
+}
+
+__WUR
+bool
+tlucanti::Channel::is_banned(const ITarget &target) const
+{
+	if (banned.find(const_cast<ITarget *>(&target)) == banned.end())
 		return false;
 	return true;
 }

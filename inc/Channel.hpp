@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 17:29:25 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/13 12:49:57 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/14 10:31:20 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,7 @@ namespace tlucanti
 		~Channel() override __DEFAULT
 
 		typedef std::list<ITarget *> user_container_type;
-		typedef std::set<ITarget *> oper_conrainer_type;
-		typedef oper_conrainer_type voice_container_type;
+		typedef std::set<ITarget *> special_conrainer_type;
 
 		void add_user(const ITarget &new_user);
 		void remove_user(const ITarget &del_user);
@@ -42,18 +41,21 @@ namespace tlucanti
 		void remove_oper(const ITarget &del_oper);
 		void add_voice(const ITarget &new_voice);
 		void remove_voice(const ITarget &del_voive);
+		void add_banned(const ITarget &new_ban);
+		void remove_banned(const ITarget &del_ban);
 
-		void assert_mode(const std::string &mode) const override;
 		__WUR bool has_mode(const std::string &mode) const override;
 		void make_mode(const std::string &mode) override;
 		__WUR std::string get_modes() const override;
-		void make_pass(const std::string &pass);
 		__WUR bool check_pass(const std::string &pass) const; // ok - true, not ok - false, if server has no password - always return true
 		__WUR bool is_oper(const ITarget &target) const;
 		__WUR bool is_voice(const ITarget &target) const;
+		__WUR bool is_banned(const ITarget &target) const;
 
 		void send_message(const std::string &message) const override;
 		void make_topic(const std::string &_topic, const ITarget &author);
+		void make_pass(const std::string &pass);
+		inline void make_limit(unsigned int n) { max_users = n; }
 
 		__WUR const std::string &get_name() const override { return name; }
 		__WUR inline const std::string &get_topic() const { return topic; }
@@ -88,8 +90,9 @@ namespace tlucanti
 		} _modes;
 
 		user_container_type		users;
-		oper_conrainer_type		operators;
-		voice_container_type	voices;
+		special_conrainer_type	operators;
+		special_conrainer_type	voices;
+		special_conrainer_type	banned;
 
 	__DELETED_MEMBERS:
 		Channel() __DELETE

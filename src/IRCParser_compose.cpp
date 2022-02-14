@@ -6,12 +6,13 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 09:35:33 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/13 21:28:09 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/14 13:59:00 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/IRCParser.hpp"
 #include "../inc/IRCrpl.hpp"
+#include "../inc/Converter.hpp"
 
 namespace tlucanti
 {
@@ -118,33 +119,38 @@ tlucanti::IRCParser::compose_join()
 	pass_list.resize(chan_list.size());
 	for (; chan_i != chan_list.end(); ++chan_i, ++pass_i)
 	{
+		if (user->has_mode("full+"))
+			return IRC::ERR_TOOMANYCHANNELS(*user, channel);
+
 		Channel *chan = database.get_channel(*chan_i);
-		if (chan == nullptr)
+		if (chan == nullptr) // create new channel
 		{
-			if (user->has_mode("full+"))
-				return IRC::ERR_TOOMANYCHANNELS(*user, chan);
 			chan = database.add_channel(*chan_i);
-			chan->add_user(*user);
 			chan->add_oper(*user);
-			user->add_channel(*chan);
 		}
-		else if (chan->has_mode("k+"))
+		if (chan->is_banned(*user)) // banned from channel
 		{
-			if (not chan->check_pass(*pass_i))
-			{
-				user->send_message(IRC::ERR_PASSWDMISMATCH(*user));
-				continue ;
-			}
-		}
-		else // channel has no password
+			user->send_message(IRC::ERR_BANNEDFROMCHAN(*user, *chan));
+			continue ;
+		}	
+		if (chan->has_mode("i+")) // invite only channel
 		{
-			if (user->has_mode("full+"))
-				return IRC::ERR_TOOMANYCHANNELS(*user, *chan);
-			if (chan->has_mode("full+"))
-				user->send_message(IRC::ERR_CHANNELISFULL(*user, *chan));
-			chan->add_user(*user);
-			user->add_channel(*chan);
+			user->send_message(IRC::ERR_INVITEONLYCHAN(*user, *chan));
+			continue ;
 		}
+		if (chan->has_mode("k+") and not chan->check_pass(*pass_i)) // channel has password
+		{
+			user->send_message(IRC::ERR_BADCHANNELKEY(*user, *chan));
+			continue ;
+		}
+		if (chan->has_mode("full+"))
+		{
+			user->send_message(IRC::ERR_CHANNELISFULL(*user, *chan));
+			continue ;
+		}
+
+		chan->add_user(*user);
+		user->add_channel(*chan);
 
 		std::cout << chan->get_users().size() << " users in channel " << chan->get_name() << "\n";
 		chan->send_message(IRC::compose_message(user->compose(), "JOIN", "", chan->get_name(), false));
@@ -160,6 +166,51 @@ tlucanti::IRCParser::compose_join()
 
 std::string
 tlucanti::IRCParser::compose_mode()
+{
+	std::string mode_string = mode;
+	if (mode_string.empty())
+	{
+		has_suffix = 0;
+		return compose_mode_single();
+	}
+	mode = "~0";
+	char sign = '~';
+	std::string::iterator it = mode_string.begin();
+	arg_list_type::iterator arg_i = modes_list.begin();
+	for (; it != mode_string.end(); ++it)
+	{
+		if (*it == '+' or *it == '-')
+		{
+			sign = *it;
+			continue ;
+		}
+		else
+		{
+			mode.at(0) = sign;
+			mode.at(1) = *it;
+		}
+		message = "";
+		has_suffix = 1;
+		if (mode == "+l" or mode == "+k" or mode.at(1) == 'v' or mode.at(1) == 'o')
+		{
+			if (arg_i != modes_list.end())
+			{
+				message = *arg_i;
+				has_suffix = 2;
+				++arg_i;
+			}
+			else
+				has_suffix = 1;
+		}
+		std::string response = compose_mode_single();
+		if (not response.empty())
+			user->send_message(response);
+	}
+	return "";
+}
+
+std::string
+tlucanti::IRCParser::compose_mode_single()
 {
 	ITarget *tar;
 	bool chan_mode = target.at(0) == '#' or target.at(0) == '&';
@@ -202,11 +253,23 @@ tlucanti::IRCParser::compose_mode()
 	if (chan_mode)
 	{
 		Channel *chan = dynamic_cast<Channel *>(tar);
-		if (mode == "i+" or mode == "i-" or mode == "k-" or mode == "m+" or mode == "m-" or mode == "s+" or mode == "s-" or mode == "t+" or mode == "t-" or mode == "n+" or mode == "n-" or mode == "l+")
+		if (mode == "i+" or mode == "i-" or mode == "k-" or mode == "m+" or mode == "m-" or mode == "s+" or mode == "s-" or mode == "t+" or mode == "t-" or mode == "n+" or mode == "n-")
 		{
 			if (has_suffix > 1)
 				user->send_message(IRC::ERR_INVALIDMODEPARAM(*user, *chan, mode.at(0), truncate(message, 10), "extra tokens ignored"));
 			chan->make_mode(mode);
+		}
+		else if (mode == "l+")
+		{
+			if (has_suffix == 1)
+				return IRC::ERR_NEEDMOREPARAMS(*user, "MODE", "expected channel password");
+			unsigned int n;
+			try {
+				n = static_cast<int>(Converter(message));
+			} catch (std::invalid_argument &) {
+				return IRC::ERR_INVALIDMODEPARAM(*user, *chan, mode.at(0), message, "invalid limit value");
+			}
+			chan->make_limit(n);
 		}
 		else if (mode == "k+")
 		{
@@ -261,7 +324,7 @@ tlucanti::IRCParser::compose_mode()
 		else
 			return IRC::ERR_UMODEUNKNOWNFLAG(*user, mode);
 	}
-	return IRC::compose_message(user->compose(), "MODE", *user, tar->get_name() + ' ' + mode + ' ' + user->get_name());
+	return IRC::compose_message(user->compose(), "MODE", *user, tar->get_name() + ' ' + mode);
 
 }
 
@@ -269,20 +332,39 @@ std::string
 tlucanti::IRCParser::compose_privmsg() const
 {
 	user->assert_mode("reg+");
-	for (arg_list_type::const_iterator it=user_list.begin();
-		it != user_list.end(); ++it)
+	arg_list_type::const_iterator it = user_list.begin();
+	for (; it != user_list.end(); ++it)
 	{
 		User *cli = database[*it];
 		if (cli == nullptr)
-			throw IRCParserException(IRC::ERR_NOSUCHNICK(*user, *it, "user with nickname"));
+			user->send_message(IRC::ERR_NOSUCHNICK(*user, *it, "user with nickname"));
 		cli->send_message(IRC::RPL_AWAY(*user, *cli, message));
 	}
-	for (arg_list_type::const_iterator it=chan_list.begin();
-		it != chan_list.end(); ++it)
+	it = chan_list.begin();
+	for (; it != chan_list.end(); ++it)
 	{
 		Channel *chan = database.get_channel(*it);
-		if (chan == nullptr)
-			throw IRCParserException(IRC::ERR_NOSUCHNICK(*user, *it, "channel with name"));
+		if (chan == nullptr) // channel not exist
+		{
+			user->send_message(IRC::ERR_NOSUCHCHANNEL(*user, *it, "channel with name"));
+			continue ;
+		}
+		if (chan->is_banned(*user)) // user banned from channel
+		{
+			user->send_message(IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are banned from channel"));
+			continue ;
+		}
+		if (chan->has_mode("n+") and (*chan)[*user] == nullptr) // no external messages
+		{
+			user->send_message(IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are have to be in this channel to send message"));
+			continue ;
+		}
+		if (chan->has_mode("m+") and not chan->is_voice(*user)) // moderated channel
+		{
+			user->send_message(IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are have no permission to speak on this channel"));
+			continue ;
+		}
+		// ok, sending message
 		chan->send_message(message);
 	}
 	return "";

@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 10:38:53 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/13 12:49:52 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/14 10:41:17 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,13 +42,14 @@ tlucanti::Database::remove_client(User &user)
 	str_access.erase(user.get_name());
 	const_cast<Socket &>(user.get_sock()).close();
 	const User::channels_list user_channels = user.get_channels();
-	User::channels_list::iterator it = user_channels.begin();
+	User::channels_list::const_iterator it = user_channels.begin();
 	for (; it != user_channels.end(); ++it)
 	{
-		user.remove_channel(**it);
 		(*it)->remove_oper(user);
 		(*it)->remove_voice(user);
 		(*it)->remove_user(user);
+		if ((*it)->get_users().empty()) // remove empty channel
+			channels.erase((*it)->get_name());
 	}
 	delete (&user);
 }

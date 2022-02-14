@@ -25,3 +25,21 @@
 - makefile
 - irc command parcer
 - delete other `IRCParserException` constructors
+
+### COMMITS
+
+
++6045	-1787
+---------------
++440	-175
++276	-63
++466	-215
++365	-158
++949	-273
++361	-210
++1323	-378
++887	-54
++84		-32
++402	-159
++402	-70
++90		-0

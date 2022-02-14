@@ -24,6 +24,7 @@ add_executable(irc
 	inc/Database.hpp
 	inc/ITarget.hpp
 	inc/User.hpp
+	inc/Converter.hpp
 	inc/Socket.hpp
 	inc/Channel.hpp
 	inc/IRCcodes.h

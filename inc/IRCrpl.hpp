@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/13 23:06:43 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/14 14:46:43 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -489,6 +489,19 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
+	inline std::string ERR_CANNOTSENDTOCHAN(const target_T &target,
+		const chan_T &channel, const std::string &message)
+	/*
+		:`SERVER` 404 `TARGET` `CHANNEL` :`MESSAGE`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_CANNOTSENDTOCHAN <<
+			' ' << target << ' ' << channel << " :" << message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename chan_T>
 	inline std::string ERR_TOOMANYCHANNELS(const target_T &target,
 		const chan_T &channel)
 	/*
@@ -633,13 +646,55 @@ namespace tlucanti::IRC
 	inline std::string ERR_CHANNELISFULL(const target_T &target,
 		const chan_T &channel)
 	/*
-		:`SERVER` 464 `TARGET` `CHANNEL` :Channel is full
+		:`SERVER` 471 `TARGET` `CHANNEL` :Channel is full
 	*/
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' <<
 			IRCcodes::ERR_CHANNELISFULL << target << ' ' << channel <<
 			" :Channel is full" << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename chan_T>
+	inline std::string ERR_INVITEONLYCHAN(const target_T &target,
+		const chan_T &channel)
+	/*
+		:`SERVER` 473 `TARGET` `CHANNEL` :Invite only channel (+i)
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_INVITEONLYCHAN << ' ' << target << ' ' << channel <<
+			" :Invite only channel (+i)" << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename chan_T>
+	inline std::string ERR_BANNEDFROMCHAN(const target_T &target,
+		const chan_T &channel)
+	/*
+		:`SERVER` 474 `TARGET` `CHANNEL` :You are banned from channel
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_BANNEDFROMCHAN << ' ' << target << ' ' << channel <<
+			" :You are banned from channel (+b)" << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename chan_T>
+	inline std::string ERR_BADCHANNELKEY(const target_T &target,
+		const chan_T &channel)
+	/*
+		:`SERVER` 475 `TARGET` `CHANNEL` :You are banned from channel
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_BADCHANNELKEY << ' ' << target << ' ' << channel <<
+			" :Invalid channel password (+k)" << IRC::endl;
 		return ss.str();
 	}
 

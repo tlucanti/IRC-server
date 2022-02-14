@@ -24,7 +24,6 @@ namespace tlucanti
 	{
 	public:
 		virtual void send_message(const std::string &message) const = 0;
-		virtual void assert_mode(const std::string &mode) const = 0;
 		__WUR virtual bool has_mode(const std::string &mode) const = 0;
 		virtual void make_mode(const std::string &mode) = 0;
 		__WUR virtual const std::string &get_name() const = 0;
