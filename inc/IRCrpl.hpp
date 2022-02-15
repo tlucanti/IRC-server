@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/14 14:46:43 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/15 19:28:48 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 
 # include "parser_utils.hpp"
 # include "IRCcodes.h"
+# include "IRCParserException.hpp"
 
 namespace tlucanti
 {
@@ -395,7 +396,21 @@ namespace tlucanti::IRC
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_ENDOFNAMES <<
-			target << ' ' << channel << " :End of /NAMES list" << IRC::endl;
+			' ' << target << ' ' << channel << " :End of /NAMES list" <<
+			IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T>
+	inline std::string ERR_NOMOTD(const target_T &target, const char *fname)
+	/*
+		:`SERVER` 422 `TARGET` :MOTD file `FILE` is missing
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NOMOTD <<
+		   ' ' << target << " :MOTD file `" << fname << "` is missing" <<
+		   IRC::endl;
 		return ss.str();
 	}
 
@@ -414,6 +429,8 @@ namespace tlucanti::IRC
 		}
 		std::stringstream ss;
 		std::ifstream fin(fname);
+		if (not fin.is_open() or not fin)
+			return IRC::ERR_NOMOTD(target, fname);
 		while (fin)
 		{
 			std::string line;
@@ -477,14 +494,15 @@ namespace tlucanti::IRC
 
 	template <typename target_T, typename chan_T>
 	inline std::string ERR_NOSUCHCHANNEL(const target_T &target,
-		const chan_T &channel, const std::string &message)
+		const chan_T &channel, const std::string &what)
 	/*
 		:`SERVER` 403 `TARGET` `CHANNEL` :`MESSAGE`
 	*/
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NOSUCHCHANNEL <<
-			' ' << target << ' ' << channel << " :" << message << IRC::endl;
+			' ' << target << ' ' << channel << " :" << what << " `" <<
+			channel << "` does not exist" << IRC::endl;
 		return ss.str();
 	}
 
@@ -554,7 +572,7 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_NONICKNAMEGIVEN  (const target_T &target)
+	inline std::string ERR_NONICKNAMEGIVEN(const target_T &target)
 	/*
 		:`SERVER` 431 `TARGET` :Expected target
 	*/
@@ -651,7 +669,7 @@ namespace tlucanti::IRC
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' <<
-			IRCcodes::ERR_CHANNELISFULL << target << ' ' << channel <<
+			IRCcodes::ERR_CHANNELISFULL << ' ' << target << ' ' << channel <<
 			" :Channel is full" << IRC::endl;
 		return ss.str();
 	}

@@ -98,7 +98,14 @@ tlucanti::IRCParser::parse()
 	else if (command == "JOIN")
 		check_format(line, "[:nick]", "cmd", "chan_list", "[pass_list]");
 	else if (command == "PART")
-		check_format(line, "[:nick]", "cmd", "chan_list");
+	{
+		check_format(line, "[:nick]", "cmd", "chan_list", "[:msg]");
+		int add = 0;
+		if (not prefix.empty())
+			++add;
+		if (has_suffix)
+			message = line.at(2 + add);
+	}
 	else if (command == "TOPIC")
 	{
 		check_format(line, "[:nick]", "cmd", "chan", "[:msg]");
@@ -164,7 +171,7 @@ tlucanti::IRCParser::parse()
 		int add = 0;
 		if (not prefix.empty())
 			++add;
-		message = line.at(2 + add).substr(1);
+		message = line.at(2 + add);
 	}
 	else if (command == "KILL")
 		throw IRCException("[tlucanti::IRCParser::parse]", "implement kill command");
@@ -212,17 +219,13 @@ tlucanti::IRCParser::exec(const Socket &client)
 	else if (command == "JOIN")
 		return compose_join();
 	else if (command == "PART")
-	{
-
-	}
+		return compose_part();
 	else if (command == "MODE")
 		return compose_mode();
 	else if (command == "TOPIC")
 		return compose_topic();
 	else if (command == "NAMES")
-	{
-
-	}
+		return compose_names();
 	else if (command == "LIST")
 	{
 
@@ -358,7 +361,7 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			if (line_i->at(0) == ':')
 				line_i->erase(0, 1);
 		}
-		else if (*format_i == "chan_list")
+		else if (*format_i == "chan_list" or *format_i == "[chan_list]")
 		{
 			arg_list_type split_list;
 			split(*line_i, split_list, ',');
@@ -378,7 +381,7 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			{
 				arg_list_type split_elem;
 				split_elem.push_back(*it);
-				check_format(line, "target");
+				check_format(split_elem, "target");
 			}
 		}
 		else if (*format_i == "target")
@@ -420,12 +423,6 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 				pass_list.push_back(*it);
 			}
 		}
-		else if (*format_i == "[chan_list]")
-		{
-			arg_list_type check;
-			check.push_back((*line_i).substr(1));
-			check_format(check, "chan_list");
-		}
 		else if (*format_i == "[mode_list]")
 		{
 			while (line_i != _line.end())
@@ -445,7 +442,7 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			++has_suffix;
 		}
 		else if ((*format_i).at(0) != '[')
-			ABORT("specifier", *format_i);
+			ABORT("unknown specifier", *format_i);
 	}
 	if (line_i != _line.end())
 		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command: " + *line_i));

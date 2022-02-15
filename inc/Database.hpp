@@ -29,6 +29,9 @@ namespace tlucanti
 	class Database
 	{
 	public:
+		typedef std::unordered_map<std::string, Channel *>
+				channel_container_type;
+
 		Database() noexcept : invisible_users(0), operators_cnt(0) {}
 		~Database();
 
@@ -43,6 +46,7 @@ namespace tlucanti
 
 		__WUR inline int get_user_cnt() const { return (int)sock_access.size(); }
 		__WUR inline int get_chan_cnt() const { return (int)channels.size(); }
+		__WUR inline const channel_container_type &get_channels() const { return channels; }
 
 		int invisible_users;
 		int operators_cnt;
@@ -51,9 +55,8 @@ namespace tlucanti
 		typedef	std::unordered_map<int, User *>			sock_hashmap_type;
 
 		typedef	std::unordered_map<std::string, User *>		string_hashmap_type;
-		typedef std::unordered_map<std::string, Channel *>
-				channel_container_type;
-		sock_hashmap_type			sock_access;
+
+		sock_hashmap_type		sock_access;
 		string_hashmap_type		str_access;
 		channel_container_type	channels;
 

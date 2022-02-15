@@ -61,6 +61,8 @@ void
 tlucanti::Channel::remove_oper(const ITarget &del_oper)
 {
 	operators.erase(const_cast<ITarget *>(&del_oper));
+	if (operators.empty() and not users.empty())
+		operators.insert(*users.begin());
 }
 
 void
@@ -213,8 +215,21 @@ tlucanti::Channel::is_banned(const ITarget &target) const
 void
 tlucanti::Channel::send_message(const std::string &message) const
 {
-	for (user_container_type::const_iterator it=users.begin(); it != users.end(); ++it)
+	user_container_type::const_iterator it=users.begin();
+	for (; it != users.end(); ++it)
 		(*it)->send_message(message);
+}
+
+void
+tlucanti::Channel::send_message(const std::string &message, const ITarget &except) const
+{
+	user_container_type::const_iterator it=users.begin();
+	for (; it != users.end(); ++it)
+	{
+		if ((*it)->get_name() == except.get_name())
+			continue ;
+		(*it)->send_message(message);
+	}
 }
 
 void

@@ -77,12 +77,17 @@ namespace tlucanti
 		__WUR std::string compose_user() const;
 		__WUR std::string compose_oper() const;
 		__WUR std::string compose_quit();
-		__WUR std::string compose_who() const;
 		__WUR std::string compose_join();
-		__WUR std::string compose_privmsg() const;
-		__WUR std::string compose_mode_single();
-		__WUR std::string compose_mode();
+		__WUR std::string compose_part() const;
 		__WUR std::string compose_topic() const;
+		__WUR std::string compose_names();
+		__WUR std::string compose_names_single() const;
+		__WUR std::string compose_list();
+		__WUR std::string compose_list_single() const;
+		__WUR std::string compose_privmsg() const;
+		__WUR std::string compose_who() const;
+		__WUR std::string compose_mode();
+		__WUR std::string compose_mode_single();
 
 		static std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
 		void check_format__macro(arg_list_type &_line, arg_list_type &_fmt);

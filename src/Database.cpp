@@ -45,9 +45,9 @@ tlucanti::Database::remove_client(User &user)
 	User::channels_list::const_iterator it = user_channels.begin();
 	for (; it != user_channels.end(); ++it)
 	{
-		(*it)->remove_oper(user);
-		(*it)->remove_voice(user);
 		(*it)->remove_user(user);
+		(*it)->remove_voice(user);
+		(*it)->remove_oper(user);
 		if ((*it)->get_users().empty()) // remove empty channel
 			channels.erase((*it)->get_name());
 	}

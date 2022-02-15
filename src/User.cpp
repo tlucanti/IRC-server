@@ -12,7 +12,7 @@
 
 #include "../inc/User.hpp"
 
-const char *tlucanti::User::modes = "iswo";
+const char *tlucanti::User::modes = "rio";
 
 tlucanti::User::User(const Socket &_sock) noexcept
 		: sock(_sock), _modes {}
@@ -117,10 +117,28 @@ tlucanti::User::assert_mode(const std::string &mode) const
 		if (channels_member.size() < tlucanti::user_max_channels)
 			throw tlucanti::IRCParserException();
 	}
+	if (mode == "i+")
+	{
+		unknown = false;
+		if (not _modes.inv)
+			throw tlucanti::IRCParserException();
+	}
+	if (mode == "i-")
+	{
+		unknown = false;
+		if (_modes.inv)
+			throw tlucanti::IRCParserException();
+	}
 	if (mode == "o+")
 	{
 		unknown = false;
 		if (not _modes.oper)
+			throw tlucanti::IRCParserException();
+	}
+	if (mode == "o-")
+	{
+		unknown = false;
+		if (_modes.oper)
 			throw tlucanti::IRCParserException();
 	}
 	if (unknown)
@@ -142,18 +160,17 @@ tlucanti::User::has_mode(const std::string &mode) const
 void
 tlucanti::User::make_mode(const std::string &mode)
 {
-	bool unknown = true;
 	if (mode == "pass+")
-	{
-		unknown = false;
 		_modes.pass = true;
-	}
 	else if (mode == "o+")
-	{
-		unknown = false;
 		_modes.oper = true;
-	}
-	if (unknown)
+	else if (mode == "o-")
+		_modes.oper = false;
+	else if (mode == "i+")
+		_modes.inv = true;
+	else if (mode == "i-")
+		_modes.inv = false;
+	else
 		ABORT("invalid user mode flag", mode);
 }
 

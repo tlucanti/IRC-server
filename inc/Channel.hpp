@@ -53,6 +53,7 @@ namespace tlucanti
 		__WUR bool is_banned(const ITarget &target) const;
 
 		void send_message(const std::string &message) const override;
+		void send_message(const std::string &message, const ITarget &except) const;
 		void make_topic(const std::string &_topic, const ITarget &author);
 		void make_pass(const std::string &pass);
 		inline void make_limit(unsigned int n) { max_users = n; }

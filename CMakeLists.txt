@@ -34,3 +34,13 @@ add_executable(irc
 	inc/IRCParserException.hpp
 	inc/parser_utils.hpp
 )
+
+add_executable(test
+	test/test.cpp
+
+	src/IRCcodes.cpp
+
+	inc/defs.h
+	inc/IRCrpl.hpp
+	inc/IRCcodes.h
+)
