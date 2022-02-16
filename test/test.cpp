@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/15 17:34:03 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/15 19:45:46 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/16 23:24:23 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,9 @@ void test_rpl()
 	RPL_test(RPL_GLOBALUSERS("TARGET", 123, 456));
 	RPL_test(RPL_AWAY(NAMREPLY_tar, "RECIPIENT", "MESSAGE"));
 	RPL_test(RPL_ENDOFWHO("TARGET", "WHO"));
+	RPL_test(RPL_LISTSTART("TARGET"));
+	RPL_test(RPL_LIST("TARGET", "CHANNEL", 999, "TOPIC"));
+	RPL_test(RPL_LISTEND("TARGET"));
 	RPL_test(RPL_CHANNELMODEIS("TARGET", "CHANNEL", "MODES", "ARGS"));
 	RPL_test(RPL_CREATIONTIME("TARGET", "CHANNEL", "TIME"));
 	RPL_test(RPL_NOTOPIC("TARGET", "CHANNEL"));
@@ -121,6 +124,23 @@ void test_rpl()
 	RPL_test(ERR_USERSDONTMATCH("TARGET", "WHAT"));
 	RPL_test(ERR_INVALIDMODEPARAM("TARGET", "RECIPIENT", 'C', "PARAM",
 		"MESSAGE"));
+
+	RPL_ADMINME
+	RPL_ADMINLOC1
+	RPL_ADMINLOC2
+	RPL_ADMINEMAIL
+	RPL_LISTSTART
+	RPL_LIST
+	RPL_LISTEND
+	RPL_INVITING
+	RPL_VERSION
+	ERR_USERNOTINCHANNEL
+	ERR_USERONCHANNEL
+	ERR_NOPRIVILEGES
+	ERR_HELPNOTFOUND
+	RPL_HELPSTART
+	RPL_HELPTXT
+	RPL_ENDOFHELP
 }
 
 int main()

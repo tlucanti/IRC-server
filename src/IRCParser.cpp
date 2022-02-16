@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 10:35:49 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/10 19:12:42 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/16 18:44:47 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,27 @@
 
 const char *tlucanti::IRCParser::PRINTABLE = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+-./:;<=>?@[\]^_`{|}~)";
 const char *tlucanti::IRCParser::PRINTABLESPACE = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+-./:;<=>?@[\]^_`{|}~ )";
-const char *tlucanti::IRCParser::LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const char *tlucanti::IRCParser::ALNUM = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char *tlucanti::IRCParser::NICKNAME = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-[]\`^{}*)";
 
-namespace tlucanti
-{
+namespace tlucanti {
 	extern Database database;
 }
+
+tlucanti::IRCParser::IRCParser(const std::string &raw_command) :
+	prefix("UNINITIALIZED_PREFFIX"),
+	command("UNINITIALIZED_COMMAND"),
+	nickname("UNINITIALIZED_NICKNAME"),
+	password("UNINITIALIZED_PASSWORD"),
+	realname("UNINITIALIZED_REALNAME"),
+	message("UNINITIALIZED_MESSAGE"),
+	channel("UNINITIALIZED_CHANNEL"),
+	mode("UNINITIALIZED_MODESTRING"),
+	target("UNINITIALIZED_TARGET"),
+	_raw_command(raw_command),
+	has_suffix(false),
+	has_preffix(false),
+	user(nullptr) {}
 
 void
 tlucanti::IRCParser::init()
@@ -28,8 +42,24 @@ tlucanti::IRCParser::init()
 	_raw_command = replace(_raw_command, "\r", "");
 	_raw_command = replace(_raw_command, "\n", "");
 	_raw_command = strip(_raw_command);
-//	_raw_command = squeeze(_raw_command); // multiple space -> single space
-//	_raw_command = replace(_raw_command, ", ", ","); // , ', ' -> ','
+	std::string _command_part, _suffix_part;
+	char _first_c = 0;
+	if (not _raw_command.empty() and _raw_command.at(0) == ':')
+	{
+		_raw_command = _raw_command.substr(1);
+		_first_c = ':';
+	}
+	std::size_t _end = _raw_command.find(':');
+	_command_part = _raw_command.substr(0, _end);
+	if (_end == std::string::npos)
+		_suffix_part = "";
+	else
+		_suffix_part = _raw_command.substr(_end);
+	_command_part = squeeze(_command_part); // multiple space -> single space
+	_command_part = replace(_command_part, ", ", ","); // , ', ' -> ','
+	_raw_command = _command_part + _suffix_part;
+	if (_first_c)
+		_raw_command = _first_c + _raw_command;
 	split_string(_raw_command, line);
 	arg_list_type::iterator it = line.begin();
 	has_suffix = false;
@@ -41,6 +71,7 @@ tlucanti::IRCParser::init()
 		if (line.size() == 1)
 			throw IRCParserException("");
 		prefix = *it;
+		has_preffix = true;
 		++it;
 	}
 	command = *it;
@@ -56,6 +87,8 @@ tlucanti::IRCParser::parse()
 
 	// reformat this function and remove if/else
 	std::transform(command.begin(), command.end(), command.begin(), ::toupper);
+
+// ---------------------------- Connection Messages ----------------------------
 	if (command == "CAP")
 	{}
 	else if (command == "PASS")
@@ -67,7 +100,7 @@ tlucanti::IRCParser::parse()
 	{
 		check_format(line, "[:nick]", "cmd", "nick");
 		int add = 0;
-		if (not prefix.empty())
+		if (has_preffix)
 			++add;
 		nickname = line.at(1 + add);
 	}
@@ -75,16 +108,32 @@ tlucanti::IRCParser::parse()
 	{
 		check_format(line, "[:nick]", "cmd", "nick", "nick", "nick", ":msg");
 		int add = 0;
-		if (not prefix.empty())
+		if (has_preffix)
 			++add;
 		nickname = line.at(1 + add);
 		realname = line.at(4 + add);
+	}
+	else if (command == "PING")
+	{
+		check_format(line, "[:nick]", "cmd", ":pass");
+		int add = 0;
+		if (has_preffix)
+			++add;
+		message = line.at(1 + add);
+	}
+	else if (command == "PONG")
+	{
+		check_format(line, "[:nick]", "cmd", "pass");
+		int add = 0;
+		if (has_preffix)
+			++add;
+		message = line.at(1 + add);
 	}
 	else if (command == "OPER")
 	{
 		check_format(line, "[:nick]", "cmd", "nick", "pass");
 		int add = 0;
-		if (not prefix.empty())
+		if (has_preffix)
 			++add;
 		nickname = line.at(1 + add);
 		password = line.at(2 + add);
@@ -95,13 +144,19 @@ tlucanti::IRCParser::parse()
 		if (has_suffix)
 			message = line.at(1);
 	}
+	else if (command == "ERROR")
+	{
+		check_format(line, "cmd", ":msg");
+		message = line.at(1);
+	}
+// ---------------------------- Channel Operations -----------------------------
 	else if (command == "JOIN")
 		check_format(line, "[:nick]", "cmd", "chan_list", "[pass_list]");
 	else if (command == "PART")
 	{
 		check_format(line, "[:nick]", "cmd", "chan_list", "[:msg]");
 		int add = 0;
-		if (not prefix.empty())
+		if (has_preffix)
 			++add;
 		if (has_suffix)
 			message = line.at(2 + add);
@@ -110,7 +165,7 @@ tlucanti::IRCParser::parse()
 	{
 		check_format(line, "[:nick]", "cmd", "chan", "[:msg]");
 		int add = 0;
-		if (not prefix.empty())
+		if (has_preffix)
 			++add;
 		channel = line.at(1 + add);
 		if (has_suffix)
@@ -124,67 +179,88 @@ tlucanti::IRCParser::parse()
 	{
 		check_format(line, "[:nick]", "cmd", "nick", "chan");
 		int add = 0;
-		if (not prefix.empty())
+		if (has_preffix)
 			++add;
 		nickname = line.at(1 + add);
 		channel = line.at(2 + add);
 	}
 	else if (command == "KICK")
 	{
-		check_format(line, "[:nick]", "cmd", "chan", "nick", "[:msg]");
+		check_format(line, "[:nick]", "cmd", "chan", "user_list", "[:msg]");
 		int add = 0;
-		if (not prefix.empty())
+		if (has_preffix)
 			++add;
 		channel = line.at(1 + add);
 		nickname = line.at(2 + add);
 		if (has_suffix)
 			message = line.at(3 + add);
 	}
+// ------------------------ Server Queries and Commands ------------------------
 	else if (command == "MOTD")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement motd command");
+		check_format(line, "[:nick]", "cmd");
 	else if (command == "VERSION")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement version command");
+		check_format(line, "[:nick]", "cmd");
 	else if (command == "ADMIN")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement admin command");
+		check_format(line, "[:nick]", "cmd");
+	else if (command == "TIME")
+		check_format(line, "[:nick]", "cmd");
 	else if (command == "HELP")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement admin command");
+	{
+		check_format(line, "[:nick]", "cmd", "str");
+		int add = 0;
+		if (has_preffix)
+			++add;
+		message = line.at(1 + add);
+	}
 	else if (command == "INFO")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement info command");
+		check_format(line, "[:nick]", "cmd");
 	else if (command == "MODE")
 	{
 		check_format(line, "[:nick]", "cmd", "target", "[str]", "[mode_list]");
 		int add = 0;
-		if (not prefix.empty())
+		if (has_preffix)
 			++add;
 		target = line.at(1 + add);
 		if (has_suffix >= 1)
 			mode = line.at(2 + add);
 	}
-	else if (command == "WHO")
-	{
-		check_format(line, "cmd", "target");
-		target = line.at(1);
-	}
+// ----------------------------- Sending Messages ------------------------------
 	else if (command == "PRIVMSG")
 	{
 		check_format(line, "[:nick]", "cmd", "receiver_list", ":msg");
 		int add = 0;
-		if (not prefix.empty())
+		if (has_preffix)
 			++add;
 		message = line.at(2 + add);
 	}
-	else if (command == "KILL")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement kill command");
-	else if (command == "PING")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement ping command");
-	else if (command == "PONG")
+	else if (command == "NOTICE")
 	{
-		check_format(line, "cmd", "pass");
+		check_format(line, "[:nick]", "cmd", "receiver_list", ":msg");
+		int add = 0;
+		if (has_preffix)
+			++add;
+		message = line.at(2 + add);
+	}
+// ---------------------------- User-Based Queries -----------------------------
+	else if (command == "WHO")
+	{
+		check_format(line, "[:nick]", "cmd", "target");
+		int add = 0;
+		if (has_preffix)
+			++add;
+		target = line.at(1 + add);
+	}
+// ----------------------------- Operator Messages -----------------------------
+	else if (command == "KILL")
+	{
+		check_format(line, "cmd", "nick", ":msg");
+		nickname = line.at(1);
+		message = line.at(2);
 	}
 	else if (command == "RESTART")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement restart command");
-	else if (command == "TIME")
-		throw IRCException("[tlucanti::IRCParser::parse]", "implement time command");
+		check_format(line, "cmd");
+	else if (command == "SQUIT")
+		check_format(line, "cmd");
 	else
 		throw IRCParserException(IRC::ERR_UNKNOWNCOMMAND(*user, command));
 }
@@ -192,7 +268,7 @@ tlucanti::IRCParser::parse()
 std::string
 tlucanti::IRCParser::exec(const Socket &client)
 {
-	if (not prefix.empty())
+	if (has_preffix)
 	{
 		user = database[prefix];
 		if (user == nullptr)
@@ -204,6 +280,8 @@ tlucanti::IRCParser::exec(const Socket &client)
 	init();
 	parse();
 
+
+// ---------------------------- Connection Messages ----------------------------
 	if (command == "CAP")
 		return compose_cap();
 	if (command == "PASS")
@@ -212,69 +290,65 @@ tlucanti::IRCParser::exec(const Socket &client)
 		return compose_nick();
 	else if (command == "USER")
 		return compose_user();
+	else if (command == "PING")
+		return compose_ping();
+	else if (command == "PONG")
+		return compose_pong();
 	else if (command == "OPER")
 		return compose_oper();
 	else if (command == "QUIT")
 		return compose_quit();
+	else if (command == "ERROR")
+		return compose_error();
+// ---------------------------- Channel Operations -----------------------------
 	else if (command == "JOIN")
 		return compose_join();
 	else if (command == "PART")
 		return compose_part();
-	else if (command == "MODE")
-		return compose_mode();
 	else if (command == "TOPIC")
 		return compose_topic();
 	else if (command == "NAMES")
 		return compose_names();
 	else if (command == "LIST")
-	{
-
-	}
+		return compose_list();
 	else if (command == "INVITE")
-	{
-
-	}
+		return compose_invite();
 	else if (command == "KICK")
-	{
-
-	}
+		return compose_kick();
+// ------------------------ Server Queries and Commands ------------------------
+	else if (command == "MOTD")
+		return compose_motd();
 	else if (command == "VERSION")
-	{
-
-	}
+		return compose_version();
+	else if (command == "ADMIN")
+		return compose_admin();
 	else if (command == "TIME")
-	{
-
-	}
+		return compose_time();
+	else if (command == "HELP")
+		return compose_help();
 	else if (command == "INFO")
-	{
-
-	}
-	else if (command == "WHO")
-		return compose_who();
+		return compose_info();
+	else if (command == "MODE")
+		return compose_mode();
+// ----------------------------- Sending Messages ------------------------------
 	else if (command == "PRIVMSG")
 		return compose_privmsg();
+	else if (command == "NOTICE")
+		return compose_notice();
+// ---------------------------- User-Based Queries -----------------------------
+	else if (command == "WHO")
+		return compose_who();
+// ----------------------------- Operator Messages -----------------------------
 	else if (command == "KILL")
-	{
-
-	}
-	else if (command == "PING")
-	{
-
-	}
-	else if (command == "PONG")
-	{
-
-	}
+		return compose_kill();
 	else if (command == "RESTART")
-	{
+		return compose_restart();
+	else if (command == "SQUIT")
+		return compose_squit();
 
-	}
 	else
-	{
-
-	}
-	throw IRCException("[tlucanti::IRCParser::exec]", "IRCParser::exec", "command `" + command + "` not implemented");
+		ABORT("invalid command", command);
+	ABORT("implement command", command);
 }
 
 tlucanti::IRCParser::arg_list_type &
@@ -317,14 +391,20 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted password"));
 			else if (*format_i == "nick")
 				throw IRCParserException(IRC::ERR_NONICKNAMEGIVEN(*user));
+			else if (*format_i == "str")
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted argument"));
 			else if (*format_i == "chan")
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted channel"));
 			else if (*format_i == ":msg")
 				throw IRCParserException(IRC::ERR_NOTEXTTOSEND(*user));
 			else if (*format_i == "chan_list")
 				throw IRCParserException(IRC::ERR_NORECIPIENT(*user, "expected channel list"));
+			else if (*format_i == "user_list")
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected user list"));
 			else if (*format_i == "receiver_list")
-				throw IRCParserException(IRC::ERR_NORECIPIENT(*user, "expected channel or user list"));
+				throw IRCParserException(IRC::ERR_NORECIPIENT(*user, "expected target list"));
+			else if (*format_i == "target")
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected target"));
 			else if (format_i->at(0) != '[')
 				ABORT("invalid format specifier", *format_i);
 			else
@@ -335,7 +415,7 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 		{
 			if (line_i->at(0) == ':')
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected password, not message suffix"));
-			if (not IRCParser::contains_only(*line_i, IRCParser::PRINTABLE))
+			if (not contains_only(*line_i, IRCParser::PRINTABLE))
 				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message can contain only printable characters with no spaces"));
 		}
 		else if (*format_i == "nick")
@@ -344,6 +424,13 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted nickname, not message suffix"));
 			if (not contains_only(*line_i, IRCParser::NICKNAME))
 				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "nickname can contain only digits, letters or special symbols -[]\\`^{}\n"));
+		}
+		else if (*format_i == "str")
+		{
+			if (line_i->at(0) == ':')
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected argument, not message suffix"));
+			if (not contains_only(*line_i, IRCParser::ALNUM))
+				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "string argumnet can contain only digin and letters"));
 		}
 		else if (*format_i == "chan")
 		{
@@ -365,12 +452,26 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 		{
 			arg_list_type split_list;
 			split(*line_i, split_list, ',');
-			for (arg_list_type::iterator it=split_list.begin(); it != split_list.end(); ++it)
+			arg_list_type::iterator it=split_list.begin();
+			for (; it != split_list.end(); ++it)
 			{
 				arg_list_type split_elem;
 				split_elem.push_back(*it);
 				check_format(split_elem, "chan");
 				chan_list.push_back(*it);
+			}
+		}
+		else if (*format_i == "user_list" or *format_i == "[user_list]")
+		{
+			arg_list_type split_list;
+			split(*line_i, split_list, ',');
+			arg_list_type::iterator it=split_list.begin();
+			for (; it != split_list.end(); ++it)
+			{
+				arg_list_type split_elem;
+				split_elem.push_back(*it);
+				check_format(split_elem, "nick");
+				user_list.push_back(*it);
 			}
 		}
 		else if (*format_i == "receiver_list")
@@ -433,30 +534,19 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 		{
 			has_suffix = true;
 			arg_list_type check;
-			line_i->erase(0, 1);
 			check.push_back(*line_i);
 			check_format(check, ":msg");
 		}
 		else if (*format_i == "[str]")
 		{
 			++has_suffix;
+			arg_list_type check;
+			check.push_back(*line_i);
+			check_format(check, "str");
 		}
 		else if ((*format_i).at(0) != '[')
 			ABORT("unknown specifier", *format_i);
 	}
 	if (line_i != _line.end())
-		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command: " + *line_i));
-}
-
-__WUR bool
-tlucanti::IRCParser::contains_only(const std::string &str, const std::string &format)
-{
-	std::set<char> str_chars(str.begin(), str.end());
-	std::set<char> format_chars(format.begin(), format.end());
-	std::set<char> union_chars;
-	std::set_union(str_chars.begin(), str_chars.end(), format_chars.begin(),
-		format_chars.end(), std::inserter(union_chars, union_chars.begin()));
-	if (union_chars.size() > format_chars.size())
-		return false;
-	return true;
+		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command ignored€: " + *line_i));
 }

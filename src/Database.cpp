@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 10:38:53 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/14 10:41:17 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/16 19:56:03 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,14 @@ tlucanti::Database::~Database()
 	sock_hashmap_type::iterator it=sock_access.begin();
 	for (; it != sock_access.end(); ++it)
 		delete it->second;
+}
+
+void
+tlucanti::Database::collapse()
+{
+	sock_hashmap_type::const_iterator it = sock_access.begin();
+	for (; it != sock_access.end(); ++it)
+		remove_client(*it->second);
 }
 
 tlucanti::Channel *
@@ -61,6 +69,39 @@ tlucanti::Database::make_edge(const std::string &nickname, const Socket &sock)
 		return true;
 	str_access.insert({nickname, sock_access[sock.get_sock()]});
 	return false;
+}
+
+void
+tlucanti::Database::make_invite(const User &user, const Channel &channel)
+{
+	time_t expiration = time(nullptr) + 60;
+	InviteNode invitation = InviteNode(&user, &channel, expiration);
+	invite_table.insert(invitation);
+}
+
+void
+tlucanti::Database::remove_invite(const User &user, const Channel &channel)
+{
+	InviteNode invitation = InviteNode(&user, &channel, 0);
+	invite_table_type::iterator inv = invite_table.find(invitation);
+	if (inv != invite_table.end())
+		invite_table.erase(inv);
+}
+
+__WUR
+bool
+tlucanti::Database::has_invite(const User &user, const Channel &channel)
+{
+	InviteNode invitation = InviteNode(&user, &channel, 0);
+	return invite_table.find(invitation) == invite_table.end();
+}
+
+void
+tlucanti::Database::send_to_all(const std::string &message) const
+{
+	sock_hashmap_type::const_iterator it = sock_access.begin();
+	for (; it != sock_access.end(); ++it)
+		it->second->send_message(message);
 }
 
 __WUR tlucanti::User *

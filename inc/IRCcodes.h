@@ -10,6 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#ifndef IRC_CODES_H
+# define IRC_CODES_H
+
 typedef unsigned short irc_code_t;
 
 namespace tlucanti::IRCcodes
@@ -177,3 +180,5 @@ namespace tlucanti::IRCcodes
 	extern irc_code_t ERR_SASLALREADY;
 	extern irc_code_t RPL_SASLMECHS;
 }
+
+#endif /* IRC_CODES_H */

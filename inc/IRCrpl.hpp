@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/15 19:28:48 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/16 23:24:21 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,34 +17,17 @@
 
 # include "parser_utils.hpp"
 # include "IRCcodes.h"
-# include "IRCParserException.hpp"
-
-namespace tlucanti
-{
-	extern const char *server_name;
-	extern const char *server_address;
-	extern const char *server_version;
-	extern const char *server_oper_login;
-	extern const char *server_oper_password;
-
-	extern std::string server_password;
-	extern std::string server_begining;
-	extern unsigned short server_port;
-
-	extern const unsigned int channel_max_users;
-	extern const unsigned int chanel_max_name_len;
-	extern const unsigned int channel_max_topic_len;
-	extern const unsigned int user_max_channels;
-	extern const unsigned int user_max_nick_len;
-}
+# include "global.h"
 
 namespace tlucanti::IRC
 {
 	template <typename from_T, typename to_T>
-	inline std::string compose_message(const from_T &from, const char *command,
+	__WUR inline
+	std::string
+	compose_message(const from_T &from, const char *command,
 		const to_T &to, const std::string &message, bool colon=true)
 	/*
-		:`FROM` `COMMAND` `TO` :`MESSAGE`
+		:`FROM` `COMMAND` `TO`z :`MESSAGE`
 	*/
 	{
 		std::stringstream ss;
@@ -60,7 +43,9 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
-	inline std::string ERROR(const std::string &message)
+	__WUR inline
+	std::string
+	ERROR(const std::string &message)
 	/*
 		ERROR :Closing Link: `ADDRESS` (`MESSAGE`)
 	*/
@@ -72,7 +57,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_WELCOME(const target_T &target)
+	__WUR inline
+	std::string
+	RPL_WELCOME(const target_T &target)
 	/*
 		:`SERVER` 001 `TARGET` :Welcome, `TARGET`
 	*/
@@ -85,7 +72,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_YOURHOST(const target_T &target)
+	__WUR inline
+	std::string
+	RPL_YOURHOST(const target_T &target)
 	/*
 		:`SERVER` 002 `TARGET` :Your host is [`HOST`/`PORT`] version `VERSION`
 	*/
@@ -99,7 +88,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_CREATED(const target_T &target)
+	__WUR inline
+	std::string
+	RPL_CREATED(const target_T &target)
 	/*
 		:`SERVER` 003 `TARGET` :This server was created `DATE`
 	*/
@@ -112,7 +103,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_MYINFO(const target_T &target, const char *user_modes, const char *channel_modes)
+	__WUR inline
+	std::string
+	RPL_MYINFO(const target_T &target, const char *user_modes, const char *channel_modes)
 	/*
 		:`SERVER` 004 `TARGET` `SERVER` `VERSION` `USERMODES` `CHANNELMODES`
 	*/
@@ -126,7 +119,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_ISUPPORT(const target_T &target)
+	__WUR inline
+	std::string
+	RPL_ISUPPORT(const target_T &target)
 	/*
 		:`SERVER` 005 `TARGET` `FEATURES` :are supported by this server
 	*/
@@ -136,14 +131,16 @@ namespace tlucanti::IRC
 			' ' << target << " SAFELIST CHANTYPES=&# CHANLIMIT=&#:32 MODES=1 "
 			"NETWORK=Tlucanti :are supported by this server" << IRC::endl;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_ISUPPORT <<
-		   ' ' << target << " CASEMAPPING=rfc1459 NICKLEN=20 MAXNICKLEN=20 "
-		   "CHANNELLEN=50 TOPICLEN=300 :are supported by this server" <<
-		   IRC::endl;
+			' ' << target << " CASEMAPPING=rfc1459 NICKLEN=20 MAXNICKLEN=20 "
+			"CHANNELLEN=50 TOPICLEN=300 :are supported by this server" <<
+			IRC::endl;
 		return ss.str();
 	}
 
 	template <typename target_T>
-	inline std::string RPL_UMODEIS(const target_T &target,
+	__WUR inline
+	std::string
+	RPL_UMODEIS(const target_T &target,
 		const std::string &modes)
 	/*
 		:`SERVER` 221 `TARGET` `MODES`
@@ -156,7 +153,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_LUSERCLIENT(const target_T &target, int users,
+	__WUR inline
+	std::string
+	RPL_LUSERCLIENT(const target_T &target, int users,
 		int invisible, int servers)
 	/*
 		:`SERVER` 251 `TARGET` :`USERS` users `INV` invisible `SERVERS` servers
@@ -171,7 +170,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_LUSEROP(const target_T &target, int operators)
+	__WUR inline
+	std::string
+	RPL_LUSEROP(const target_T &target, int operators)
 	/*
 		:`SERVER` 252 `TARGET` `OPS` :operator(s) online
 	*/
@@ -184,7 +185,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_LUSERCHANNELS(const target_T &target, int channels)
+	__WUR inline
+	std::string
+	RPL_LUSERCHANNELS(const target_T &target, int channels)
 	/*
 		:`SERVER` 254 `TARGET` `CHANNELS` :channels formed
 	*/
@@ -197,7 +200,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_LUSERME(const target_T &target, int clients,
+	__WUR inline
+	std::string
+	RPL_LUSERME(const target_T &target, int clients,
 		int servers)
 	/*
 		:`SERVER` 255 `TARGET` :I have `CLIENTS` clients and `SERVERS` servers
@@ -211,7 +216,71 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_LOCALUSERS(const target_T &target, int users,
+	__WUR inline
+	std::string
+	RPL_ADMINME(const target_T &target,
+		const std::string &server)
+	/*
+		:`SERVER` 256 `TARGET` `SERVER` :Administrative info
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_ADMINME <<
+			' ' << target << ' ' << server << " :Administrative info" <<
+			IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_ADMINLOC1(const target_T &target,
+		const std::string &message)
+	/*
+		:`SERVER` 257 `TARGET` :`MESSAGE`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_ADMINLOC1 <<
+			' ' << target << " :" << message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_ADMINLOC2(const target_T &target,
+		const std::string &message)
+	/*
+		:`SERVER` 258 `TARGET` :`MESSAGE`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_ADMINLOC2 <<
+			' ' << target << " :" << message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_ADMINEMAIL(const target_T &target,
+		const std::string &message)
+	/*
+		:`SERVER` 259 `TARGET` :`MESSAGE`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_ADMINEMAIL <<
+			' ' << target << " :" << message << IRC::endl;
+		return ss.str();
+	}
+
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_LOCALUSERS(const target_T &target, int users,
 		int maxusers)
 	/*
 		:`SERVER` 265 `TARGET` `USERS` `MAX` :local `USERS` users, max `MAX`
@@ -226,7 +295,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_GLOBALUSERS(const target_T &target, int glbl_users,
+	__WUR inline
+	std::string
+	RPL_GLOBALUSERS(const target_T &target, int glbl_users,
 		int glbl_maxusers)
 	/*
 		:`SERVER` 266 `TARGET` `USERS` `MAX` :global `USERS` users, max `MAX`
@@ -241,7 +312,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename to_T>
-	inline std::string RPL_AWAY(const target_T &target, const to_T &recepient,
+	__WUR inline
+	std::string
+	RPL_AWAY(const target_T &target, const to_T &recepient,
 		const std::string &message)
 	/*
 		(301) :`NICK(full)` PRIVMSG `RECEPIENT` :`MESSAGE`
@@ -254,7 +327,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename who_T>
-	inline std::string RPL_ENDOFWHO(const target_T &target, const who_T &who)
+	__WUR inline
+	std::string
+	RPL_ENDOFWHO(const target_T &target, const who_T &who)
 	/*
 		:`SERVER` 315 `TARGET` `WHO` :End of /WHO list"
 	*/
@@ -265,8 +340,54 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_LISTSTART(const target_T &target)
+	/*
+		:`SERVER` 321 `TARGET` Channel :Users  Name
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_LISTSTART <<
+			' ' << target << " Channel :Users  Name" << IRC::endl;
+		return ss.str();
+	}
+
 	template <typename target_T, typename chan_T>
-	inline std::string RPL_CHANNELMODEIS(const target_T &target,
+	__WUR inline
+	std::string
+	RPL_LIST(const target_T &target,
+		const chan_T &channel, unsigned int users, const std::string &topic)
+	/*
+		:`SERVER` 322 `TARGET` `CHANNEL` `USERS` :`TOPIC`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_LIST <<
+			' ' << target << ' ' << channel << ' ' << users << " :" << topic <<
+			IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_LISTEND(const target_T &target)
+	/*
+		:`SERVER` 323 `TARGET` :End of /LIST
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_LISTEND <<
+			" :End of /LIST" << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename chan_T>
+	__WUR inline
+	std::string
+	RPL_CHANNELMODEIS(const target_T &target,
 		const chan_T &channel, const std::string &modes, const std::string &args)
 	/*
 		:`SERVER` 324 `TARGET` `CHANNEL` `MODES` `ARGS`
@@ -280,7 +401,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T, typename time_T>
-	inline std::string RPL_CREATIONTIME(const target_T &target,
+	__WUR inline
+	std::string
+	RPL_CREATIONTIME(const target_T &target,
 		const chan_T &channel, const time_T &create_time)
 	/*
 		:`SERVER` 329 `TARGET` `CHANNEL` `TIME`
@@ -294,7 +417,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string RPL_NOTOPIC(const target_T &target,
+	__WUR inline
+	std::string
+	RPL_NOTOPIC(const target_T &target,
 		const chan_T &channel)
 	/*
 		:`SERVER` 331 `TARGET` `CHANNEL` :No topic is set in channel
@@ -308,7 +433,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string RPL_TOPIC(const target_T &target, const chan_T &channel,
+	__WUR inline
+	std::string
+	RPL_TOPIC(const target_T &target, const chan_T &channel,
 		const std::string &topic)
 	/*
 		:`SERVER` 332 `TARGET` `CHANNEL` :`TOPIC`
@@ -322,7 +449,9 @@ namespace tlucanti::IRC
 
 	template <typename target_T, typename chan_T, typename author_T,
 		typename time_T>
-	inline std::string RPL_TOPICWHOTIME(const target_T &target,
+	__WUR inline
+	std::string
+	RPL_TOPICWHOTIME(const target_T &target,
 		const chan_T &channel, const author_T &author, const time_T &time)
 	/*
 		:`SERVER` 333 `TARGET` `CHANNEL` `AUTHOR` `TIME`
@@ -336,7 +465,41 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename user_T, typename chan_T>
-	inline std::string RPL_WHOREPLY(const target_T &target, const user_T &user, const chan_T &channel)
+	__WUR inline
+	std::string
+	RPL_INVITING(const target_T &target,
+		const user_T &user, const chan_T &channel)
+	/*
+		:`SERVER` 341 `TARGET` `USER` `CHANNEL`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_INVITING <<
+			' ' << target << ' ' << user << ' ' << channel << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_VERSION(const target_T &target,
+		const std::string &version, const std::string &server,
+		const std::string &message)
+	/*
+		:`SERVER` 341 `TARGET` `VERSION` `SERVER` :`MESSAGE`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_VERSION <<
+			' ' << target << ' ' << version << ' ' << server << " :" <<
+			message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename user_T, typename chan_T>
+	__WUR inline
+	std::string
+	RPL_WHOREPLY(const target_T &target, const user_T &user, const chan_T &channel)
 	/*
 		:`SERVER` 352 `TARGET` `CHANNEL` `USERNAME` `HOST` `SERVER` `NICK` \
 			`FLAGS` :`COUNT` `REALNAME`
@@ -351,7 +514,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T, typename list_T, typename c_T>
-	inline std::string RPL_NAMREPLY(const target_T &target, char symbol,
+	__WUR inline
+	std::string
+	RPL_NAMREPLY(const target_T &target, char symbol,
 		const chan_T &channel, const list_T &user_list, const c_T &ch)
 	/*
 		:`SERVER` 353 `TARGET` `SYM` `CHANNEL` :`USER1` `USER2` ...
@@ -388,7 +553,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string RPL_ENDOFNAMES(const target_T &target,
+	__WUR inline
+	std::string
+	RPL_ENDOFNAMES(const target_T &target,
 		const chan_T &channel)
 	/*
 		:`SERVER` 366 `TARGET` `CHANNEL` :End of /NAMES list
@@ -402,20 +569,24 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_NOMOTD(const target_T &target, const char *fname)
+	__WUR inline
+	std::string
+	ERR_NOMOTD(const target_T &target, const char *fname)
 	/*
 		:`SERVER` 422 `TARGET` :MOTD file `FILE` is missing
 	*/
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NOMOTD <<
-		   ' ' << target << " :MOTD file `" << fname << "` is missing" <<
-		   IRC::endl;
+			' ' << target << " :[INTERNAL ERROR] MOTD file `" << fname << "` is missing" <<
+			IRC::endl;
 		return ss.str();
 	}
 
 	template <typename target_T>
-	inline std::string RPL_MOTD(const target_T &target, const char *fname)
+	__WUR inline
+	std::string
+	RPL_MOTD(const target_T &target, const char *fname)
 	/*
 		:`SERVER` 372 `TARGET` :- `LINE OF MOTD`
 	*/
@@ -424,7 +595,7 @@ namespace tlucanti::IRC
 		{
 			std::stringstream ss;
 			ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_MOTD <<
-			   ' ' << target << " :- ";
+				' ' << target << " :- ";
 			start = ss.str();
 		}
 		std::stringstream ss;
@@ -442,7 +613,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_MOTDSTART(const target_T &target)
+	__WUR inline
+	std::string
+	RPL_MOTDSTART(const target_T &target)
 	/*
 		:`SERVER` 375 `TARGET` :- `SERVER` Message of the day -
 	*/
@@ -454,7 +627,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_ENDOFMOTD(const target_T &target)
+	__WUR inline
+	std::string
+	RPL_ENDOFMOTD(const target_T &target)
 	/*
 		:`SERVER` 376 `TARGET` :End of /MOTD command.
 	*/
@@ -466,7 +641,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string RPL_YOUREOPER(const target_T &target,
+	__WUR inline
+	std::string
+	RPL_YOUREOPER(const target_T &target,
 		const std::string &message)
 	/*
 		:`SERVER` 381 `TARGET` :`MESSAGE`
@@ -479,7 +656,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_NOSUCHNICK(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_NOSUCHNICK(const target_T &target,
 		const std::string &recepient, const std::string &what)
 	/*
 		:`SERVER` 401 `TARGET` `RECEPIENT` :`WHAT` with `RECEPIENT` does not exist
@@ -493,7 +672,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string ERR_NOSUCHCHANNEL(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_NOSUCHCHANNEL(const target_T &target,
 		const chan_T &channel, const std::string &what)
 	/*
 		:`SERVER` 403 `TARGET` `CHANNEL` :`MESSAGE`
@@ -507,7 +688,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string ERR_CANNOTSENDTOCHAN(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_CANNOTSENDTOCHAN(const target_T &target,
 		const chan_T &channel, const std::string &message)
 	/*
 		:`SERVER` 404 `TARGET` `CHANNEL` :`MESSAGE`
@@ -520,7 +703,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string ERR_TOOMANYCHANNELS(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_TOOMANYCHANNELS(const target_T &target,
 		const chan_T &channel)
 	/*
 		:`SERVER` 405 `TARGET` `CHANNEL` :You have joined too many channels
@@ -534,7 +719,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_NORECIPIENT(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_NORECIPIENT(const target_T &target,
 		const std::string &message)
 	/*
 		:`SERVER` 411 `TARGET` :`MESSAGE`
@@ -547,7 +734,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_NOTEXTTOSEND(const target_T &target)
+	__WUR inline
+	std::string
+	ERR_NOTEXTTOSEND(const target_T &target)
 	/*
 		:`SERVER` 412 `TARGET` :Expected message
 	*/
@@ -559,7 +748,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_UNKNOWNCOMMAND(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_UNKNOWNCOMMAND(const target_T &target,
 		const std::string &command)
 	/*
 		:`SERVER` 421 `TARGET` `COMMAND` :Command `COMMAND` is unknown
@@ -572,19 +763,23 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_NONICKNAMEGIVEN(const target_T &target)
+	__WUR inline
+	std::string
+	ERR_NONICKNAMEGIVEN(const target_T &target)
 	/*
 		:`SERVER` 431 `TARGET` :Expected target
 	*/
 	{
 		std::stringstream ss;
-		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NONICKNAMEGIVEN  <<
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NONICKNAMEGIVEN <<
 			' ' << target << " :Expected target" << IRC::endl;
 		return ss.str();
 	}
 
 	template <typename target_T, typename new_target_T>
-	inline std::string ERR_NICKNAMEINUSE(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_NICKNAMEINUSE(const target_T &target,
 		const new_target_T &new_nick)
 	/*
 		:`SERVER` 433 `TARGET` `NEWNICK` :target `NEWNICK` is already in use.
@@ -597,8 +792,27 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
+	template <typename target_T, typename user_T, typename chan_T>
+	__WUR inline
+	std::string
+	ERR_USERNOTINCHANNEL(const target_T &target,
+		const user_T &user, const chan_T &channel)
+	/*
+		:`SERVER` 441 `TARGET` `USER` `CHANNEL` :is not on channel
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_USERONCHANNEL << ' ' << target << ' ' << user <<
+			' ' << channel << " :user " << user <<
+			" is not on channel " << channel << IRC::endl;
+		return ss.str();
+	}
+
 	template <typename target_T, typename chan_T>
-	inline std::string ERR_NOTONCHANNEL(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_NOTONCHANNEL(const target_T &target,
 		const chan_T &channel)
 	/*
 		:`SERVER` 442 `TARGET` `CHANNEL` :You're not on that channel
@@ -611,8 +825,27 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
+	template <typename target_T, typename user_T, typename chan_T>
+	__WUR inline
+	std::string
+	ERR_USERONCHANNEL(const target_T &target,
+		const user_T &user, const chan_T &channel)
+	/*
+		:`SERVER` 443 `TARGET` `USER` `CHANNEL` :is already on channel
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_USERONCHANNEL << ' ' << target << ' ' << user <<
+			' ' << channel << " :user " << user <<
+			" is already on channel " << channel << IRC::endl;
+		return ss.str();
+	}
+
 	template <typename target_T>
-	inline std::string ERR_NOTREGISTERED(const target_T &target)
+	__WUR inline
+	std::string
+	ERR_NOTREGISTERED(const target_T &target)
 	/*
 		:`SERVER` 451 `TARGET` :You need to register
 	*/
@@ -624,7 +857,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_NEEDMOREPARAMS(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_NEEDMOREPARAMS(const target_T &target,
 		const std::string &command, const std::string &message)
 	/*
 		:`SERVER` 461 `TARGET` `COMMAND` :`MESSAGE`
@@ -638,7 +873,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_ALREADYREGISTERED(const target_T &target)
+	__WUR inline
+	std::string
+	ERR_ALREADYREGISTERED(const target_T &target)
 	/*
 		:`SERVER` 462 `TARGET` :You are already registered
 	*/
@@ -649,7 +886,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_PASSWDMISMATCH(const target_T &target)
+	__WUR inline
+	std::string
+	ERR_PASSWDMISMATCH(const target_T &target)
 	/*
 		:`SERVER` 464 `TARGET` :Password incorrect
 	*/
@@ -661,7 +900,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string ERR_CHANNELISFULL(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_CHANNELISFULL(const target_T &target,
 		const chan_T &channel)
 	/*
 		:`SERVER` 471 `TARGET` `CHANNEL` :Channel is full
@@ -675,7 +916,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string ERR_INVITEONLYCHAN(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_INVITEONLYCHAN(const target_T &target,
 		const chan_T &channel)
 	/*
 		:`SERVER` 473 `TARGET` `CHANNEL` :Invite only channel (+i)
@@ -689,7 +932,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string ERR_BANNEDFROMCHAN(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_BANNEDFROMCHAN(const target_T &target,
 		const chan_T &channel)
 	/*
 		:`SERVER` 474 `TARGET` `CHANNEL` :You are banned from channel
@@ -703,7 +948,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T, typename chan_T>
-	inline std::string ERR_BADCHANNELKEY(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_BADCHANNELKEY(const target_T &target,
 		const chan_T &channel)
 	/*
 		:`SERVER` 475 `TARGET` `CHANNEL` :You are banned from channel
@@ -716,8 +963,25 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
+	template <typename target_T>
+	__WUR inline
+	std::string
+	ERR_NOPRIVILEGES(const target_T &target)
+	/*
+		:`SERVER` 481 `TARGET` :Permission Denied
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_NOPRIVILEGES << ' ' << target << " :Permission "
+			"Denied - You're not an IRC operator" << IRC::endl;
+		return ss.str();
+	}
+
 	template <typename target_T, typename chan_T>
-	inline std::string ERR_CHANOPRIVSNEEDED(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_CHANOPRIVSNEEDED(const target_T &target,
 		const chan_T &channel)
 	/*
 		:`SERVER` 482 `TARGET` `CHANNEL` :You are need to be channel operator
@@ -731,7 +995,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_UMODEUNKNOWNFLAG(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_UMODEUNKNOWNFLAG(const target_T &target,
 		const std::string &mode)
 	/*
 		:`SERVER` 501 `TARGET` :Unknown MODE flag `MODE`
@@ -745,7 +1011,9 @@ namespace tlucanti::IRC
 	}
 
 	template <typename target_T>
-	inline std::string ERR_USERSDONTMATCH(const target_T &target, const std::string &what)
+	__WUR inline
+	std::string
+	ERR_USERSDONTMATCH(const target_T &target, const std::string &what)
 	/*
 		:`SERVER` 502 `TARGET` :Can not change/see mode for other users
 	*/
@@ -757,8 +1025,26 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
+	template <typename target_T, typename sub_T>
+	__WUR inline
+	std::string
+	ERR_HELPNOTFOUND(const target_T &target,
+		const sub_T &subject)
+	/*
+		:`SERVER` 524 `TARGET` `SUBJECT` :help file not found
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << target << ' ' << subject <<
+			' ' << ": [INTERNAL ERROR: HELP FILE CANNOT BE OPENED]" <<
+			IRC::endl;
+		return ss.str();
+	}
+
 	template <typename target_T, typename rec_T>
-	inline std::string ERR_INVALIDMODEPARAM(const target_T &target,
+	__WUR inline
+	std::string
+	ERR_INVALIDMODEPARAM(const target_T &target,
 		const rec_T &recepient, char mode, const std::string &param,
 		const std::string &message)
 	/*
@@ -770,6 +1056,93 @@ namespace tlucanti::IRC
 			IRCcodes::ERR_INVALIDMODEPARAM << ' ' << target << ' ' <<
 			recepient << ' ' << mode << ' ' << param << ' ' << " :" <<
 			message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename sub_T>
+	__WUR inline
+	std::string
+	RPL_HELPSTART(const target_T &target,
+		const sub_T &subject, const std::string &header)
+	/*
+		:`SERVER` 704 `TARGET` `SUBJECT` :`HEADER`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_HELPSTART <<
+			' ' << target << ' ' << subject << " :" << header << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename sub_T>
+	__WUR inline
+	std::string
+	RPL_HELPTXT(const target_T &target, const sub_T &subject,
+		const char *fname)
+	/*
+		:`SERVER` 705 `TARGET` `SUBJECT` :`MANUAL LINE`
+	*/
+	{
+		std::string start;
+		{
+			std::stringstream ss;
+			ss << ':' << tlucanti::server_name << ' ' <<
+				IRCcodes::RPL_HELPTXT << ' ' << target << ' ' << subject << " :";
+			start = ss.str();
+		}
+		std::stringstream ss;
+		std::ifstream fin(fname);
+		if (not fin.is_open() or not fin)
+			return IRC::ERR_HELPNOTFOUND(target, subject);
+		bool found = false;
+		while (fin)
+		{
+			std::string line;
+			std::getline(fin, line);
+			if (line != "## " + subject)
+			{
+				ss << start << " >>> THE " << subject <<
+					" COMMAND MANUAL <<< " << IRC::endl;
+				ss << start << IRC::endl;
+				found = true;
+				break ;
+			}
+		}
+		if (not found)
+		{
+			ss << start << IRC::endl;
+			ss << start << "Command `" << subject << "` is unknown." <<
+				IRC::endl;
+			ss << start << IRC::endl;
+			ss << start << "Try /HELP without arguments to list" << IRC::endl;
+			ss << start << "all available commands" << IRC::endl;
+			return ss.str();
+		}
+		while (fin)
+		{
+			std::string line;
+			std::getline(fin, line);
+			if (line.substr(0, 3) == "## ")
+				break ;
+			ss << start << line << IRC::endl;
+		}
+		fin.close();
+		return ss.str();
+	}
+
+	template <typename target_T, typename sub_T>
+	__WUR inline
+	std::string
+	RPL_ENDOFHELP(const target_T &target, const sub_T &subject)
+	/*
+		:`SERVER` 706 `TARGET` `SUBJECT` :end of manual
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_ENDOFHELP <<
+			' ' << target << subject << " :(For more information visit full "
+			"documentation website `https://modern.ircdocs.horse/`)" <<
+			IRC::endl;
 		return ss.str();
 	}
 }

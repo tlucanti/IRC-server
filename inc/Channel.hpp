@@ -22,11 +22,10 @@
 # include "defs.h"
 # include "IRCException.hpp"
 # include "IRCParserException.hpp"
+# include "global.h"
 
 namespace tlucanti
 {
-	extern const unsigned int channel_max_users;
-
 	struct Channel : public ITarget
 	{
 		Channel(const std::string &name);
@@ -41,8 +40,8 @@ namespace tlucanti
 		void remove_oper(const ITarget &del_oper);
 		void add_voice(const ITarget &new_voice);
 		void remove_voice(const ITarget &del_voive);
-		void add_banned(const ITarget &new_ban);
-		void remove_banned(const ITarget &del_ban);
+		void add_ban(const ITarget &new_ban);
+		void remove_ban(const ITarget &del_ban);
 
 		__WUR bool has_mode(const std::string &mode) const override;
 		void make_mode(const std::string &mode) override;

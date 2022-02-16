@@ -52,7 +52,7 @@ tlucanti::User::send_message(const std::string &message) const
 }
 
 void
-tlucanti::User::send_to_chanels(const std::string &message) const
+tlucanti::User::send_to_channels(const std::string &message) const
 {
 	channels_list::iterator it=channels_member.begin();
 	for (; it != channels_member.end(); ++it)

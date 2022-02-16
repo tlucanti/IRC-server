@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 10:56:57 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/07 20:58:59 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/16 18:47:47 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,27 +17,15 @@
 # include <string>
 # include <sstream>
 # include <iterator>
+# include <set>
 
-namespace tlucanti::IRC
-{
-	extern std::string endl;
-}
+# include "global.h"
 
 namespace tlucanti
 {
-	template<class T, class U>
-	struct is_same : std::false_type {};
-
-	template<class T>
-	struct is_same<T, T> : std::true_type {};
-
-	template <typename T, typename Who>
-	bool isinstance(__UNUSED const Who &)
-	{
-		return is_same<T, Who>::value;
-	}
-
-	inline void split(const std::string &str, std::vector<std::string> &out, char c=' ')
+	inline
+	void
+	split(const std::string &str, std::vector<std::string> &out, char c=' ')
 	{
 		if (c == ' ')
 		{
@@ -65,7 +53,9 @@ namespace tlucanti
 		}
 	}
 
-	inline std::string squeeze(const std::string &str)
+	__WUR inline
+	std::string
+	squeeze(const std::string &str)
 	{
 		std::vector<std::string> _split;
 		split(str, _split);
@@ -78,7 +68,9 @@ namespace tlucanti
 		return squeeze_str;
 	}
 
-	inline std::string replace(const std::string &str, const std::string &from, const std::string &to)
+	__WUR inline
+	std::string
+	replace(const std::string &str, const std::string &from, const std::string &to)
 	{
 		if (from == to)
 			return str;
@@ -93,7 +85,9 @@ namespace tlucanti
 		return ret;
 	}
 
-	inline std::string strip(const std::string &str, char c=' ')
+	__WUR inline
+	std::string
+	strip(const std::string &str, char c=' ')
 	{
 		std::string ret = str;
 		if (c == ' ')
@@ -140,89 +134,28 @@ namespace tlucanti
 		}
 	}
 
-//	inline std::string compose_message(const User &from,
-//		irc_code_t code, const User &recepient, const std::string &message)
-//	{
-//		std::string _from;
-//		if (from == nullptr)
-//			_from = tlucanti::server_name;
-//		else
-//			_from = from.compose();
-//		std::string ret = ':' + _from + ' ' +
-//			std::to_string(code) + ' ' + recepient.get_nickname() +
-//			+ " :" + message + IRC::endl;
-//		return ret;
-//	}
-
-//	inline std::string compose_message(const User &from,
-//		const std::string &command, const std::string &recepient, const std::string &message)
-//	{
-//		std::string _from;
-//		if (from == User::nil)
-//			_from = tlucanti::server_name;
-//		else
-//			_from = from.compose();
-//		std::string ret = ':' + _from + ' ' + command + ' ' + recepient + " :" + message + IRC::endl;
-//		return ret;
-//	}
-
-//	inline std::string compose_message(const User &from,
-//		const std::string &command, const User &recepient, const std::string &message)
-//	{
-//		return compose_message(from, command, recepient.get_nickname(), message);
-//	}
-
-//	inline std::string compose_message(const User &from,
-//									   irc_code_t code, const std::string &message)
-//	{
-//		std::string _from;
-//		if (from == User::nil)
-//			_from = tlucanti::server_name;
-//		else
-//			_from = from.compose();
-//		std::string ret = ':' + _from + ' ' +
-//						  std::to_string(code) + ' ' +
-//						  message + IRC::endl;
-//		return ret;
-//	}
-
-	inline std::string get_current_time() {
-		const char *month[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September",
-							   "October", "November", "December"};
-		const char *day[] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
-		char buf[100] = {};
-		std::string ret;
-
-		time_t now = time(nullptr);
-		struct tm tstruct = *localtime(&now);
-		bzero(buf, sizeof(buf));
-		strftime(buf, sizeof(buf) / sizeof(char), "%d", &tstruct);
-		ret += day[atoi(buf)];
-		bzero(buf, sizeof(buf));
-		strftime(buf, sizeof(buf) / sizeof(char), "%m", &tstruct);
-		ret += ' ';
-		ret += month[atoi(buf)];
-		bzero(buf, sizeof(buf));
-		strftime(buf, sizeof(buf) / sizeof(char), "%d", &tstruct);
-		ret += ' ';
-		ret += buf;
-		bzero(buf, sizeof(buf));
-		strftime(buf, sizeof(buf) / sizeof(char), "%Y", &tstruct);
-		ret += ' ';
-		ret += buf;
-		ret += " at ";
-		bzero(buf, sizeof(buf));
-		strftime(buf, sizeof(buf) / sizeof(char), "%X", &tstruct);
-		ret += buf;
-		return ret;
-	}
-
-	inline std::string truncate(const std::string &str, size_t maxlen=10)
+	__WUR inline
+	std::string
+	truncate(const std::string &str, size_t maxlen=10)
 	{
 		if (str.size() <= maxlen)
 			return str;
 		else
 			return str.substr(0, maxlen - 2) + "..";
+	}
+
+	__WUR inline
+	bool
+	contains_only(const std::string &str, const std::string &format)
+	{
+		std::set<char> str_chars(str.begin(), str.end());
+		std::set<char> format_chars(format.begin(), format.end());
+		std::set<char> union_chars;
+		std::set_union(str_chars.begin(), str_chars.end(), format_chars.begin(),
+			format_chars.end(), std::inserter(union_chars, union_chars.begin()));
+		if (union_chars.size() > format_chars.size())
+			return false;
+		return true;
 	}
 }
 

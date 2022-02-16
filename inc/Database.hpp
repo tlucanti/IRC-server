@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/06 17:36:58 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/06 17:43:13 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/16 13:48:12 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 # include "User.hpp"
 # include "Channel.hpp"
 # include "Socket.hpp"
+# include "InviteNode.hpp"
 
 namespace tlucanti
 {
@@ -31,14 +32,21 @@ namespace tlucanti
 	public:
 		typedef std::unordered_map<std::string, Channel *>
 				channel_container_type;
+		typedef std::set<InviteNode> invite_table_type;
 
 		Database() noexcept : invisible_users(0), operators_cnt(0) {}
 		~Database();
+		void collapse();
 
 		Channel *add_channel(const std::string &name);
 		void add_client(const Socket &sock);
 		void remove_client(User &user);
 		__WUR bool make_edge(const std::string &nickname, const Socket &sock);
+		void make_invite(const User &user, const Channel &channel);
+		void remove_invite(const User &user, const Channel &channel);
+		__WUR bool has_invite(const User &user, const Channel &channel);
+
+		void send_to_all(const std::string &message) const;
 
 		__WUR User *operator[](const std::string &nickname) const;
 		__WUR User *operator[](const Socket &client) const;
@@ -53,12 +61,12 @@ namespace tlucanti
 		const int max_users = 500;
 	private:
 		typedef	std::unordered_map<int, User *>			sock_hashmap_type;
-
-		typedef	std::unordered_map<std::string, User *>		string_hashmap_type;
+		typedef	std::unordered_map<std::string, User *>	string_hashmap_type;
 
 		sock_hashmap_type		sock_access;
 		string_hashmap_type		str_access;
 		channel_container_type	channels;
+		invite_table_type		invite_table;
 
 	__DELETED_MEMBERS:
 		Database(const Database &) __DELETE

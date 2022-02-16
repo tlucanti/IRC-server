@@ -13,6 +13,9 @@
 #include "../inc/Server.hpp"
 #include "../inc/Color.hpp"
 #include "../inc/Database.hpp"
+#include "../inc/Converter.hpp"
+
+#include <string>
 
 const int tlucanti::Socket::READ_SIZE = 64;
 const int tlucanti::Server::WAIT_TIME = 500;
@@ -20,6 +23,7 @@ namespace tlucanti
 {
 	const tlucanti::color cout;
 	tlucanti::Database database;
+	sig_atomic_t server_run;
 
 	const char *server_name = "__TLUCANTI__";
 	const char *server_address = "0.0.0.0";
@@ -39,11 +43,45 @@ namespace tlucanti
 
 	namespace IRC
 	{
-		std::string endl = "\n";
+		const std::string endl = "\n";
 	}
 }
 
-void check_args(int argc, const char **argv)
+__WUR
+std::string
+get_current_time()
+{
+	const char *month[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September",
+						   "October", "November", "December"};
+	const char *day[] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+	char buf[100] = {};
+	std::string ret;
+
+	time_t now = time(nullptr);
+	struct tm tstruct = *localtime(&now);
+	bzero(buf, sizeof(buf));
+	strftime(buf, sizeof(buf) / sizeof(char), "%d", &tstruct);
+	ret += day[static_cast<int>(tlucanti::Converter<char *>(buf))];
+	bzero(buf, sizeof(buf));
+	strftime(buf, sizeof(buf) / sizeof(char), "%m", &tstruct);
+	ret += ' ';
+	ret += month[static_cast<int>(tlucanti::Converter<char *>(buf))];
+	bzero(buf, sizeof(buf));
+	strftime(buf, sizeof(buf) / sizeof(char), "%d", &tstruct);
+	ret += ' ';
+	ret += buf;
+	bzero(buf, sizeof(buf));
+	strftime(buf, sizeof(buf) / sizeof(char), "%Y", &tstruct);
+	ret += ' ';
+	ret += buf;
+	ret += " at ";
+	bzero(buf, sizeof(buf));
+	strftime(buf, sizeof(buf) / sizeof(char), "%X", &tstruct);
+	ret += buf;
+	return ret;
+}
+
+void check_args(int argc, const char *const *argv)
 {
 	if (argc == 2 and std::string(argv[2]) == "--help")
 	{
@@ -60,19 +98,26 @@ void check_args(int argc, const char **argv)
 	else
 	{
 		tlucanti::server_password = argv[2];
-		tlucanti::server_begining = tlucanti::get_current_time();
+		tlucanti::server_begining = get_current_time();
 		tlucanti::server_port = atoi(argv[1]); // make normal string -> int
+		tlucanti::server_run = 0;
 	}
 }
 
-int main(int argc, const char **argv)
+int main(int argc, char *const *argv)
 {
-//	try {
+//	try
+	{
 		check_args(argc, argv);
 		tlucanti::Server server(tlucanti::server_address, tlucanti::server_port);
 		tlucanti::cout << "[w]server started at address: [" << tlucanti::server_address << "/" << argv[1] << "][]\n";
 		tlucanti::server_start(server);
-//	} catch (std::exception &exc) {
+		if (tlucanti::server_run == 'r')
+			execv(argv[0], argv);
+		else if (tlucanti::server_run == 'q')
+			return 0;
+	}
+//	catch (std::exception &exc) {
 //		tlucanti::cout << exc;
 //	}
 }

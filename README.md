@@ -1,9 +1,10 @@
 
 # IRC C++ SERVER
 
-## Server commands
+## Availiable Server commands
 
-### \[:USERNAME\] PASS PASSWORD
+## PASS
+#### \[:USERNAME\] PASS PASSWORD
 > used `PASSWORD` to authorize server connection (must be first command from
 > client to server)
 > example:
@@ -13,7 +14,8 @@
 > responses:
 > - ERR_NEEDMOREPARAMS
 
-### \[:OLDINCK\] NICK USERNAME
+## NICK
+#### \[:OLDINCK\] NICK USERNAME
 > change or create user nickname to `USERNAME`
 > if user with current nickname exist in server - ERR_NICKCOLLISION thrown
 > prefix `OLDNICK` can be used to change other user nickname
@@ -30,7 +32,8 @@
 > - ERR_NICKNAMEINUSE
 > - ERR_NICKCOLLISION
 
-### \[:SOURCENAME\] USER USERNAME HOSTNAME SERVERNAME :REALNAME
+## USER
+#### \[:SOURCENAME\] USER USERNAME HOSTNAME SERVERNAME :REALNAME
 > command used to authenticate user in server database (must be second command
 > from client to server after command `PASS`)
 > #### example:
@@ -41,11 +44,12 @@
 > - ERR_NEEDMOREPARAMS
 > - ERR_ALREADYREGISTRED
 
-### PING
+## PING
 
-### PONG
+## PONG
 
-### \[:USERNAME\] OPER LOGIN PASSWORD
+## OPER
+#### \[:USERNAME\] OPER LOGIN PASSWORD
 > make current user irc operator, `LOGIN` and `PASSWORD` are required to gain
 > privileges
 > #### example:
@@ -58,7 +62,8 @@
 > - ERR_NOOPERHOST
 > - ERR_PASSWDMISMATCH
 
-### \[:USERNAME\] QUIT :\[MESSAGE\]
+## QUIT
+#### \[:USERNAME\] QUIT :\[MESSAGE\]
 > command to end client session, server closes connection with client after this
 > message. If `MESSAGE` is not given - nickname will be used
 > #### example:
@@ -68,7 +73,8 @@
 > #### responses:
 > None
 
-### \[:USERNAME\] JOIN \#CHANNEL1\[,&CHANNEL2 \[...\]\] \[KEY1\[,KEY2\] \[...\]\]
+## JOIN
+#### \[:USERNAME\] JOIN \#CHANNEL1\[,&CHANNEL2 \[...\]\] \[KEY1\[,KEY2\] \[...\]\]
 > join to channels named by comas using keys (if provided), if channel is not
 > exist - creates channel and makes current user operator of new channel
 > #### example:
@@ -92,7 +98,8 @@
 > - ERR_TOOMANYCHANNELS
 > - RPL_TOPIC
 
-### \[:USERNAME\] PART \#CHANNEL1 \[, &CHANNEL2\] \[...\]
+## PART
+#### \[:USERNAME\] PART \#CHANNEL1 \[, &CHANNEL2\] \[...\]
 > leave current user from listed channels
 > #### example:
 > ```
@@ -103,7 +110,8 @@
 > - ERR_NOSUCHCHANNEL
 > - ERR_NOTONCHANNEL
 
-### \[:USERNAME\] TOPIC #CHANNEL \[:NEWTOPIC\]
+## TOPIC
+#### \[:USERNAME\] TOPIC #CHANNEL \[:NEWTOPIC\]
 > command changes topic of channel `CHANNEL` to `NEWTOPIC` or get channel topic
 > if no arguments provided
 > #### example:
@@ -123,7 +131,8 @@
 > - RPL_TOPIC
 > - ERR_CHANOPRIVSNEEDED
 
-### \[:USERNAME\] NAMES \[#CHANNEL1\] \[, &CHANNEL2\] \[...\]
+## NAMES
+#### \[:USERNAME\] NAMES \[#CHANNEL1\] \[, &CHANNEL2\] \[...\]
 > command list all visible (not private (+p), or secret (+s)) nicknames from
 > listed channels, if no arguments provided - returned information about all
 > online users. If user online and not in channel - his channel name is `*`
@@ -138,7 +147,8 @@
 > - RPL_NAMREPLY
 > - RPL_ENDOFNAMES
 
-### \[:USERNAME\] LIST \[#CHANNEL1\] \[, &CHANNEL2\] \[...\]
+## LIST
+#### \[:USERNAME\] LIST \[#CHANNEL1\] \[, &CHANNEL2\] \[...\]
 > command list channels and their topics, if no arguments provided - listed
 > all channels. Private channels are listed without their topics as channel
 > `Prv` unless current client is not in this private channel, secret channels 
@@ -155,9 +165,10 @@
 > - RPL_LIST
 > - RPL_LISTEND
 
-### \[:USERNAME\] INVITE NICKNAME #CHANNEL
-> command invite users to channel, there is no requirement that the channel
-> `CHANNEL` must exist, if channel `CHANNEL` is invite only (mode +i), current
+## INVITE
+#### \[:USERNAME\] INVITE NICKNAME #CHANNEL
+> command invite users to channel, that the channel
+> `CHANNEL` should exist, if channel `CHANNEL` is invite only (mode +i), current
 > user should be operator of channel `CHANNEL`
 > #### example:
 > ```
@@ -175,36 +186,47 @@
 > - RPL_INVITING
 > - RPL_AWAY
 
-
-### \[:USERNAME\] KICK \#CHANNEL USERNAME \[REASON\]
+## KICK
+#### \[:USERNAME\] KICK \#CHANNEL USERNAME \[REASON\]
 > kick user `USERNAME` from channel `#CHANNEL` and if specified send him message
 > `REASON`, command available only for operators, user `USERNAME` can join
 > channel `CHANNEL` again (command `KICK` is forced command `PART`)
 
-### MOTD
+## MOTD
+#### \[:USERNAME\] MOTD
+> 
 
-### VERSION
+## VERSION
+#### \[:USERNAME\] VERSION \[SERVER\]
+>
 
-### ADMIN
+## ADMIN
+### \[:USERNAME\] ADMIN \[SERVER\]
+>
 
-### HELP
+## HELP
+#### HELP
+>
 
-### INFO
+## INFO
 
-### MODE
+## MODE
 
+## PRIVMSG
 ### PRIVMSG USERNAME MESSAGE
 > send private message `MESSAGE` to user `USERNAME`
 
+## WHO
 ### WHO TARGET
 > 
 
+## KILL
 ### KILL USERNAME REASON
 > send message `REASON` to user `USERNAME` and breaks connection with him, user
 > `USERNAME` can login again
 
-### RESTART
+## RESTART
 
-### SQUIT
+## SQUIT
 
-### TIME
+## TIME

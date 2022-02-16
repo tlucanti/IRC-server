@@ -42,7 +42,7 @@ namespace tlucanti
 		__WUR inline const Socket &get_sock() const { return sock; }
 
 		void send_message(const std::string &message) const override;
-		void send_to_chanels(const std::string &message) const;
+		void send_to_channels(const std::string &message) const;
 
 		void add_channel(Channel &channel);
 		void remove_channel(Channel &channel);

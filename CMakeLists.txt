@@ -21,12 +21,14 @@ add_executable(irc
 	inc/IRCException.hpp
 	inc/ServerException.hpp
 	inc/Server.hpp
+	inc/global.h
 	inc/Database.hpp
 	inc/ITarget.hpp
 	inc/User.hpp
 	inc/Converter.hpp
 	inc/Socket.hpp
 	inc/Channel.hpp
+	inc/InviteNode.hpp
 	inc/IRCcodes.h
 	inc/Color.hpp
 	inc/IRCrpl.hpp

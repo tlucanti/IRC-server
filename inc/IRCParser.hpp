@@ -6,27 +6,29 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 14:20:18 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/10 19:13:23 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/16 18:51:51 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef IRCPARSER_HPP
 # define IRCPARSER_HPP
 
-#include <string>
-#include <list>
-#include <vector>
-#include <sstream>
-#include <set>
-#include <iostream>
+# include <string>
+# include <list>
+# include <vector>
+# include <sstream>
+# include <set>
+# include <iostream>
+# include <sys/stat.h>
 
-#include "defs.h"
-#include "IRCcodes.h"
-#include "Database.hpp"
-#include "IRCParserException.hpp"
-#include "IRCException.hpp"
-#include "parser_utils.hpp"
-#include "IRCrpl.hpp"
+# include "defs.h"
+# include "IRCcodes.h"
+# include "Database.hpp"
+# include "IRCParserException.hpp"
+# include "IRCException.hpp"
+# include "parser_utils.hpp"
+# include "IRCrpl.hpp"
+# include "Converter.hpp"
 
 namespace tlucanti
 {
@@ -43,8 +45,7 @@ namespace tlucanti
 	public:
 		typedef std::vector<std::string>	arg_list_type;
 
-		IRCParser(const std::string &raw_command)
-				: _raw_command(raw_command), has_suffix(false), user(nullptr) {}
+		IRCParser(const std::string &raw_command);
 
 		std::string exec(const Socket &client);
 		std::string		prefix;
@@ -69,14 +70,19 @@ namespace tlucanti
 		arg_list_type pass_list;
 		arg_list_type modes_list;
 		int has_suffix;
+		bool has_preffix;
 		User *user;
 
 		__WUR std::string compose_cap() const;
 		__WUR std::string compose_pass() const;
 		__WUR std::string compose_nick() const;
 		__WUR std::string compose_user() const;
+		__WUR std::string compose_ping() const;
+		__WUR std::string compose_pong() const;
 		__WUR std::string compose_oper() const;
 		__WUR std::string compose_quit();
+		__WUR std::string compose_error() const;
+
 		__WUR std::string compose_join();
 		__WUR std::string compose_part() const;
 		__WUR std::string compose_topic() const;
@@ -84,18 +90,33 @@ namespace tlucanti
 		__WUR std::string compose_names_single() const;
 		__WUR std::string compose_list();
 		__WUR std::string compose_list_single() const;
-		__WUR std::string compose_privmsg() const;
-		__WUR std::string compose_who() const;
+		__WUR std::string compose_invite() const;
+		__WUR std::string compose_kick();
+
+		__WUR std::string compose_motd() const;
+		__WUR std::string compose_version() const;
+		__WUR std::string compose_admin() const;
+		__WUR std::string compose_time() const;
+		__WUR std::string compose_help();
+		__WUR std::string compose_info() const;
 		__WUR std::string compose_mode();
 		__WUR std::string compose_mode_single();
 
+		__WUR std::string compose_privmsg() const;
+		__WUR std::string compose_notice() const;
+
+		__WUR std::string compose_who() const;
+
+		__WUR std::string compose_kill() const;
+		__WUR std::string compose_restart() const;
+		__WUR std::string compose_squit() const;
+
 		static std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
 		void check_format__macro(arg_list_type &_line, arg_list_type &_fmt);
-		__WUR bool contains_only(const std::string &str, const std::string &format);
 
 		static const char *PRINTABLE;
 		static const char *PRINTABLESPACE;
-		static const char *LETTERS;
+		static const char *ALNUM;
 		static const char *NICKNAME;
 		std::string		_raw_command;
 

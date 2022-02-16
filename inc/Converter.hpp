@@ -18,6 +18,7 @@
 # include <sstream>
 
 # include "parser_utils.hpp"
+# include "global.h"
 
 namespace tlucanti
 {
@@ -28,21 +29,30 @@ namespace tlucanti
 		typedef value_T value_type;
 
 		explicit Converter(const value_type &val)
-			: _val(val) {}
+				: _val(val)
+		{
+			static_assert(
+				tlucanti::is_same<value_T, std::string>::value or
+				tlucanti::is_same<value_T, char *>::value,
+				"unsupported type"
+			);
+		}
 
 		explicit operator int() const
 		{
-			if (is_same<value_T, std::string>::value)
-			{
-				std::stringstream ss(strip(_val));
-				int n;
-				ss >> n;
-				if (not ss.eof() or ss.fail())
-					throw std::invalid_argument("invalid value");
-				return n;
-			}
-			else
-				throw std::invalid_argument("type is not supported");
+			if (tlucanti::is_same<value_T, std::string>::value or
+					tlucanti::is_same<value_T, char *>::value)
+				return string_to_int(_val);
+		}
+
+		int string_to_int(const std::string &val) const
+		{
+			std::stringstream ss(_val);
+			int n;
+			ss >> n;
+			if (not ss.eof() or ss.fail())
+				throw std::invalid_argument("invalid value");
+			return n;
 		}
 
 	private:

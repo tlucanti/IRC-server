@@ -14,8 +14,11 @@
 
 const char *tlucanti::Channel::modes = "likmstn";
 
-tlucanti::Channel::Channel(const std::string &name)
-		: name(name), max_users(tlucanti::channel_max_users)
+tlucanti::Channel::Channel(const std::string &name) :
+		name(name),
+		max_users(tlucanti::channel_max_users),
+		topic_time(0),
+		_modes {}
 {
 	create_time = time(nullptr);
 	_modes.limit = true;
@@ -46,7 +49,7 @@ tlucanti::Channel::add_voice(const ITarget &new_voice)
 }
 
 void
-tlucanti::Channel::add_banned(const ITarget &new_ban)
+tlucanti::Channel::add_ban(const ITarget &new_ban)
 {
 	banned.insert(const_cast<ITarget *>(&new_ban));
 }
@@ -72,7 +75,7 @@ tlucanti::Channel::remove_voice(const ITarget &del_voive)
 }
 
 void
-tlucanti::Channel::remove_banned(const ITarget &del_ban)
+tlucanti::Channel::remove_ban(const ITarget &del_ban)
 {
 	banned.erase(const_cast<ITarget *>(&del_ban));
 }
@@ -238,7 +241,7 @@ tlucanti::Channel::make_topic(const std::string &_topic,
 {
 	topic = _topic;
 	topic_author = author.get_name();
-	topic_time = std::time(0);
+	topic_time = std::time(nullptr);
 }
 
 __WUR

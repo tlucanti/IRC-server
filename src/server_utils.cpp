@@ -18,14 +18,15 @@
 namespace tlucanti
 {
 	extern Database database;
+	extern sig_atomic_t server_run;
 	std::string make_response(const Socket &client, const std::string &request);
 }
 
 namespace tlucanti
 {
-	__NORET void server_start(Server &server)
+	void server_start(Server &server)
 	{
-		while (true)
+		while (!tlucanti::server_run)
 		{
 			Socket new_cli = server.accept();
 			if (new_cli != Socket::nil)
@@ -55,9 +56,7 @@ namespace tlucanti
 
 	std::string make_response(const Socket &client, const std::string &request)
 	{
-
-		try
-		{
+		try {
 			return IRCParser(request).exec(client);
 		} catch (IRCParserException &exc) {
 			return exc.what();
