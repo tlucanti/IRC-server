@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/16 23:24:21 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/17 14:59:04 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -540,7 +540,8 @@ namespace tlucanti::IRC
 				ss << IRC::endl << start;
 				dec = 0;
 			}
-			ss << ' ';
+			if (dec != 0)
+				ss << ' ';
 			if (ch.is_oper(**it))
 				ss << '@';
 			else if (ch.is_voice(**it))
@@ -803,7 +804,7 @@ namespace tlucanti::IRC
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' <<
-			IRCcodes::ERR_USERONCHANNEL << ' ' << target << ' ' << user <<
+			IRCcodes::ERR_USERNOTINCHANNEL << ' ' << target << ' ' << user <<
 			' ' << channel << " :user " << user <<
 			" is not on channel " << channel << IRC::endl;
 		return ss.str();
@@ -1025,18 +1026,19 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
-	template <typename target_T, typename sub_T>
+	template <typename target_T>
 	__WUR inline
 	std::string
 	ERR_HELPNOTFOUND(const target_T &target,
-		const sub_T &subject)
+		const std::string &subject)
 	/*
 		:`SERVER` 524 `TARGET` `SUBJECT` :help file not found
 	*/
 	{
 		std::stringstream ss;
-		ss << ':' << tlucanti::server_name << ' ' << target << ' ' << subject <<
-			' ' << ": [INTERNAL ERROR: HELP FILE CANNOT BE OPENED]" <<
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_HELPNOTFOUND << ' ' << target << ' ' << subject <<
+			' ' << ": [INTERNAL ERROR]: HELP File is missing" <<
 			IRC::endl;
 		return ss.str();
 	}
@@ -1054,16 +1056,16 @@ namespace tlucanti::IRC
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' <<
 			IRCcodes::ERR_INVALIDMODEPARAM << ' ' << target << ' ' <<
-			recepient << ' ' << mode << ' ' << param << ' ' << " :" <<
+			recepient << ' ' << mode << ' ' << param << " :" <<
 			message << IRC::endl;
 		return ss.str();
 	}
 
-	template <typename target_T, typename sub_T>
+	template <typename target_T>
 	__WUR inline
 	std::string
 	RPL_HELPSTART(const target_T &target,
-		const sub_T &subject, const std::string &header)
+		const std::string &subject, const std::string &header)
 	/*
 		:`SERVER` 704 `TARGET` `SUBJECT` :`HEADER`
 	*/
@@ -1074,10 +1076,10 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
-	template <typename target_T, typename sub_T>
+	template <typename target_T>
 	__WUR inline
 	std::string
-	RPL_HELPTXT(const target_T &target, const sub_T &subject,
+	RPL_HELPTXT(const target_T &target, const std::string &subject,
 		const char *fname)
 	/*
 		:`SERVER` 705 `TARGET` `SUBJECT` :`MANUAL LINE`
@@ -1099,7 +1101,7 @@ namespace tlucanti::IRC
 		{
 			std::string line;
 			std::getline(fin, line);
-			if (line != "## " + subject)
+			if (line == "## " + subject)
 			{
 				ss << start << " >>> THE " << subject <<
 					" COMMAND MANUAL <<< " << IRC::endl;
@@ -1130,10 +1132,10 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 
-	template <typename target_T, typename sub_T>
+	template <typename target_T>
 	__WUR inline
 	std::string
-	RPL_ENDOFHELP(const target_T &target, const sub_T &subject)
+	RPL_ENDOFHELP(const target_T &target, const std::string &subject)
 	/*
 		:`SERVER` 706 `TARGET` `SUBJECT` :end of manual
 	*/

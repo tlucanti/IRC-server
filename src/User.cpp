@@ -14,8 +14,11 @@
 
 const char *tlucanti::User::modes = "rio";
 
-tlucanti::User::User(const Socket &_sock) noexcept
-		: sock(_sock), _modes {}
+tlucanti::User::User(const Socket &_sock) noexcept :
+		sock(_sock),
+		_modes {},
+		last_ping(0),
+		ping_waiting(true)
 {
 	_modes.pass = false;
 	_modes.nick = false;

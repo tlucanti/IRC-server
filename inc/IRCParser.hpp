@@ -111,7 +111,7 @@ namespace tlucanti
 		__WUR std::string compose_restart() const;
 		__WUR std::string compose_squit() const;
 
-		static std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
+		std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
 		void check_format__macro(arg_list_type &_line, arg_list_type &_fmt);
 
 		static const char *PRINTABLE;

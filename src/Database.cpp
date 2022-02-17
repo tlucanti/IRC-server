@@ -74,26 +74,41 @@ tlucanti::Database::make_edge(const std::string &nickname, const Socket &sock)
 void
 tlucanti::Database::make_invite(const User &user, const Channel &channel)
 {
+	invite_mutex.lock();
 	time_t expiration = time(nullptr) + 60;
 	InviteNode invitation = InviteNode(&user, &channel, expiration);
 	invite_table.insert(invitation);
+	invite_mutex.unlock();
 }
 
 void
 tlucanti::Database::remove_invite(const User &user, const Channel &channel)
 {
+	invite_mutex.lock();
 	InviteNode invitation = InviteNode(&user, &channel, 0);
 	invite_table_type::iterator inv = invite_table.find(invitation);
 	if (inv != invite_table.end())
 		invite_table.erase(inv);
+	invite_mutex.unlock();
+}
+
+void
+tlucanti::Database::remove_invite(const InviteNode &inv)
+{
+	invite_mutex.lock();
+	invite_table.erase(inv);
+	invite_mutex.unlock();
 }
 
 __WUR
 bool
 tlucanti::Database::has_invite(const User &user, const Channel &channel)
 {
+	invite_mutex.lock();
 	InviteNode invitation = InviteNode(&user, &channel, 0);
-	return invite_table.find(invitation) == invite_table.end();
+	bool ret = invite_table.find(invitation) == invite_table.end();
+	invite_mutex.unlock();
+	return ret;
 }
 
 void

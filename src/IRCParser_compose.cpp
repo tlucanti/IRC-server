@@ -185,7 +185,8 @@ tlucanti::IRCParser::compose_join()
 
 		std::cout << chan->get_users().size() << " users in channel " << chan->get_name() << "\n";
 		chan->send_message(IRC::compose_message(user->compose(), "JOIN", "", chan->get_name(), false));
-		IRCParser(":" + user->get_name() + " TOPIC " + chan->get_name()).exec(user->get_sock());
+		channel = chan->get_name();
+		user->send_message(compose_topic());
 
 		Channel::user_container_type users = chan->get_users();
 		std::string content;

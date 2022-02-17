@@ -4,18 +4,6 @@ project(irc)
 set(CMAKE_CXX_STANDARD 23)
 
 add_executable(irc
-	src/IRCParser.cpp
-	src/Socket.cpp
-	src/Channel.cpp
-	src/IRCParser_compose.cpp
-	src/server_utils.cpp
-	src/IRCcodes.cpp
-	src/Database.cpp
-	src/User.cpp
-	src/IRCException.cpp
-	src/main.cpp
-	src/Server.cpp
-
 	inc/SocketException.hpp
 	inc/defs.h
 	inc/IRCException.hpp
@@ -33,8 +21,23 @@ add_executable(irc
 	inc/Color.hpp
 	inc/IRCrpl.hpp
 	inc/IRCParser.hpp
+	inc/Mutex.hpp
+	inc/Thread.hpp
 	inc/IRCParserException.hpp
 	inc/parser_utils.hpp
+
+	src/IRCParser.cpp
+	src/Mutex.cpp
+	src/Socket.cpp
+	src/Channel.cpp
+	src/IRCParser_compose.cpp
+	src/server_utils.cpp
+	src/IRCcodes.cpp
+	src/Database.cpp
+	src/User.cpp
+	src/IRCException.cpp
+	src/main.cpp
+	src/Server.cpp
 )
 
 add_executable(test

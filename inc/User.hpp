@@ -78,7 +78,13 @@ namespace tlucanti
 		std::string _username;
 		std::string _realname;
 
+		time_t last_ping;
+		unsigned long long ping_message;
+		bool ping_waiting;
+
 		channels_list channels_member;
+
+		friend void *ping_thread(void *);
 
 	__DELETED_MEMBERS:
 		User() __DELETE

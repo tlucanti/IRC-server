@@ -11,21 +11,37 @@
 /* ************************************************************************** */
 
 #include <iostream>
+#include <map>
+#include <mutex>
 
 #include "../inc/Server.hpp"
 #include "../inc/IRCParser.hpp"
+#include "../inc/Thread.hpp"
 
 namespace tlucanti
 {
 	extern Database database;
 	extern sig_atomic_t server_run;
 	std::string make_response(const Socket &client, const std::string &request);
+	void main_thread(Server &server);
+	void *invite_thread(void *);
+	void *ping_thread(void *);
 }
 
 namespace tlucanti
 {
 	void server_start(Server &server)
 	{
+		Thread inv_daemon(reinterpret_cast<void *(*)(void *)>(invite_thread), nullptr);
+		Thread ping_daemon(reinterpret_cast<void *(*)(void *)>(ping_thread), nullptr);
+		main_thread(server);
+		inv_daemon.join();
+		ping_daemon.join();
+	}
+
+	void main_thread(Server &server)
+	{
+		std::map<Socket, std::string> cached;
 		while (!tlucanti::server_run)
 		{
 			Socket new_cli = server.accept();
@@ -38,7 +54,14 @@ namespace tlucanti
 			Socket client = server.poll();
 			if (client == Socket::nil)
 				continue;
-			std::string request = client.recv();
+			std::string request = cached[client] + client.recv();
+			if (request.back() != '\n' and request.back() != '\r')
+			{
+				cached[client] = request;
+				continue ;
+			}
+			else
+				cached.erase(client);
 			std::vector<std::string> commands;
 			split(request, commands, '\n');
 			for (std::vector<std::string>::iterator it=commands.begin(); it != commands.end(); ++it)
@@ -46,12 +69,66 @@ namespace tlucanti
 				if (it->empty())
 					continue ;
 
-				std::cout << "data from client " << client.get_sock() << " (" << it->size() << "): <" << it->substr(0, it->size() - 1) << ">\n";
+				std::cout << "data from client " << client.get_sock() << " (" << it->size() << "): <" << strip(*it) << ">\n";
 				std::string response = make_response(client, *it);
 				if (not response.empty())
 					client.send(response);
 			}
 		}
+	}
+
+	void *invite_thread(void *)
+	{
+		while (!tlucanti::server_run)
+		{
+			Database::invite_table_type::iterator it = database.invite_table.begin();
+			for (; it != database.invite_table.end(); ++it)
+			{
+				if (time(nullptr) > it->expire)
+					database.remove_invite(*it);
+			}
+
+			sleep(1);
+		}
+		return nullptr;
+	}
+
+	void *ping_thread(void *)
+	{
+		typedef unsigned long long ull;
+		int wait = 0;
+		while (!tlucanti::server_run)
+		{
+			if (wait < 10)
+			{
+				sleep(1);
+				continue ;
+			}
+			else
+				wait = 0;
+			Database::sock_hashmap_type::const_iterator it = database.sock_access.begin();
+			for (; it != database.sock_access.end(); ++it)
+			{
+				User *user = it->second;
+				if (not user->ping_waiting and time(nullptr) > user->last_ping + 60)
+				{
+					std::stringstream ss;
+					ull ping_message = ((ull)rand() << 32) + (ull)rand();
+					ss << "PING :" << ping_message << IRC::endl;
+					user->send_message(ss.str());
+					user->ping_waiting = true;
+					user->ping_message = ping_message;
+					user->last_ping = time(nullptr);
+				}
+				else if (user->ping_waiting and time(nullptr) > user->last_ping + 250)
+				{
+					user->send_to_channels(IRC::compose_message(user->compose(), "QUIT", "", "Ping timeout: 255 seconds"));
+					user->send_message(IRC::ERROR("Ping timeout: 255 seconds"));
+					database.remove_client(*(it->second));
+				}
+			}
+		}
+		return nullptr;
 	}
 
 	std::string make_response(const Socket &client, const std::string &request)

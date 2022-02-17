@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/15 17:34:03 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/16 23:24:23 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/17 14:54:25 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 
 #include "../inc/defs.h"
 #include "../inc/IRCrpl.hpp"
-#include "../inc/IRCcodes.h"
 
 void RPL_test(const std::string &resp) {
 	for (char c : resp)
@@ -40,7 +39,7 @@ namespace tlucanti
 	std::string server_begining = "SERVER_BEGINING";
 
 	namespace IRC {
-		std::string endl = "[ENDL]";
+		const std::string endl = "[ENDL]";
 	}
 }
 
@@ -80,6 +79,10 @@ void test_rpl()
 	RPL_test(RPL_LUSEROP("TARGET", 123));
 	RPL_test(RPL_LUSERCHANNELS("TARGET", 123));
 	RPL_test(RPL_LUSERME("TARGET", 123, 456));
+	RPL_test(RPL_ADMINME("TARGET", "SERVER"));
+	RPL_test(RPL_ADMINLOC1("TARGET", "MESSAGE"));
+	RPL_test(RPL_ADMINLOC2("TARGET", "MESSAGE"));
+	RPL_test(RPL_ADMINEMAIL("TARGET", "MESSAGE"));
 	RPL_test(RPL_LOCALUSERS("TARGET", 123, 456));
 	RPL_test(RPL_GLOBALUSERS("TARGET", 123, 456));
 	RPL_test(RPL_AWAY(NAMREPLY_tar, "RECIPIENT", "MESSAGE"));
@@ -92,6 +95,8 @@ void test_rpl()
 	RPL_test(RPL_NOTOPIC("TARGET", "CHANNEL"));
 	RPL_test(RPL_TOPIC("TARGET", "CHANNEL", "TOPIC"));
 	RPL_test(RPL_TOPICWHOTIME("TARGET", "CHANNEL", "AUTHOR", "TIME"));
+	RPL_test(RPL_INVITING("TARGET", "USER", "CHANNEL"));
+	RPL_test(RPL_VERSION("TARGET", "VERSION", "SERVER", "MESSAGE"));
 	RPL_test(RPL_WHOREPLY("TARGET", NAMREPLY_tar, "CHANNEL"));
 	RPL_test(RPL_NAMREPLY("TARGET", 'C', "CHANNEL", NAMREPLY_user_list,
 		NAMREPLY_tar));
@@ -110,7 +115,9 @@ void test_rpl()
 	RPL_test(ERR_UNKNOWNCOMMAND("TARGET", "COMMAND"));
 	RPL_test(ERR_NONICKNAMEGIVEN("TARGET"));
 	RPL_test(ERR_NICKNAMEINUSE("TARGET", "NEW_NICK"));
+	RPL_test(ERR_USERNOTINCHANNEL("TARGET", "USER", "CHANNEL"));
 	RPL_test(ERR_NOTONCHANNEL("TARGET", "CHANNEL"));
+	RPL_test(ERR_USERONCHANNEL("TARGET", "USER", "CHANEL"));
 	RPL_test(ERR_NOTREGISTERED("TARGET"));
 	RPL_test(ERR_NEEDMOREPARAMS("TARGET", "COMMAND", "MESSAGE"));
 	RPL_test(ERR_ALREADYREGISTERED("TARGET"));
@@ -119,28 +126,16 @@ void test_rpl()
 	RPL_test(ERR_INVITEONLYCHAN("TARGET", "CHANNEL"));
 	RPL_test(ERR_BANNEDFROMCHAN("TARGET", "CHANNEL"));
 	RPL_test(ERR_BADCHANNELKEY("TARGET", "CHANNEL"));
+	RPL_test(ERR_NOPRIVILEGES("TARGET"));
 	RPL_test(ERR_CHANOPRIVSNEEDED("TARGET", "CHANNEL"));
 	RPL_test(ERR_UMODEUNKNOWNFLAG("TARGET", "FLAG"));
 	RPL_test(ERR_USERSDONTMATCH("TARGET", "WHAT"));
+	RPL_test(ERR_HELPNOTFOUND("TARGET", "SUBJECT"));
 	RPL_test(ERR_INVALIDMODEPARAM("TARGET", "RECIPIENT", 'C', "PARAM",
 		"MESSAGE"));
-
-	RPL_ADMINME
-	RPL_ADMINLOC1
-	RPL_ADMINLOC2
-	RPL_ADMINEMAIL
-	RPL_LISTSTART
-	RPL_LIST
-	RPL_LISTEND
-	RPL_INVITING
-	RPL_VERSION
-	ERR_USERNOTINCHANNEL
-	ERR_USERONCHANNEL
-	ERR_NOPRIVILEGES
-	ERR_HELPNOTFOUND
-	RPL_HELPSTART
-	RPL_HELPTXT
-	RPL_ENDOFHELP
+	RPL_test(RPL_HELPSTART("TARGET", "SUBJECT", "HEADER"));
+	RPL_test(RPL_HELPTXT("TARGET", "SUBJECT", "../test/test_help.txt"));
+	RPL_test(RPL_ENDOFHELP("TARGET", "SUBJECT"));
 }
 
 int main()

@@ -42,39 +42,30 @@ tlucanti::IRCParser::init()
 	_raw_command = replace(_raw_command, "\r", "");
 	_raw_command = replace(_raw_command, "\n", "");
 	_raw_command = strip(_raw_command);
+	if (_raw_command.empty())
+		throw IRCParserException("");
+	if (_raw_command.at(0) == ':')
+		has_preffix = true;
 	std::string _command_part, _suffix_part;
-	char _first_c = 0;
-	if (not _raw_command.empty() and _raw_command.at(0) == ':')
-	{
-		_raw_command = _raw_command.substr(1);
-		_first_c = ':';
-	}
-	std::size_t _end = _raw_command.find(':');
-	_command_part = _raw_command.substr(0, _end);
-	if (_end == std::string::npos)
-		_suffix_part = "";
-	else
-		_suffix_part = _raw_command.substr(_end);
+	std::size_t _suffix_start = std::min(_raw_command.size(), _raw_command.find(':', 1));
+	_command_part = _raw_command.substr(0, _suffix_start);
+	_suffix_part = _raw_command.substr(_suffix_start);
 	_command_part = squeeze(_command_part); // multiple space -> single space
 	_command_part = replace(_command_part, ", ", ","); // , ', ' -> ','
-	_raw_command = _command_part + _suffix_part;
-	if (_first_c)
-		_raw_command = _first_c + _raw_command;
+	if (not _suffix_part.empty())
+		_raw_command = _command_part + ' ' + _suffix_part;
+	else
+		_raw_command = _command_part;
 	split_string(_raw_command, line);
-	arg_list_type::iterator it = line.begin();
 	has_suffix = false;
 
-	if (line.empty())
+	if (line.empty() or (line.size() == 1 and has_preffix))
 		throw IRCParserException("");
-	if (it->at(0)== ':')
-	{
-		if (line.size() == 1)
-			throw IRCParserException("");
-		prefix = *it;
-		has_preffix = true;
-		++it;
-	}
-	command = *it;
+
+	arg_list_type::iterator it = line.begin();
+	if (has_preffix)
+		prefix = *(it++);
+	command = *it; // iterator will valid because line.size() >= 1 (or >= 2 with prefix)
 	while (++it != line.end())
 		arguments.push_back(*it);
 }
@@ -223,6 +214,8 @@ tlucanti::IRCParser::parse()
 		target = line.at(1 + add);
 		if (has_suffix >= 1)
 			mode = line.at(2 + add);
+		else
+			mode = "";
 	}
 // ----------------------------- Sending Messages ------------------------------
 	else if (command == "PRIVMSG")
@@ -278,6 +271,8 @@ tlucanti::IRCParser::exec(const Socket &client)
 		user = database[client];
 
 	init();
+	if (command.empty())
+		return "";
 	parse();
 
 
@@ -355,22 +350,22 @@ tlucanti::IRCParser::arg_list_type &
 tlucanti::IRCParser::split_string(const std::string &str, arg_list_type &out)
 {
 	std::stringstream	ss(str);
-	bool was_prefix = false;
 
+	if (has_preffix)
+		ss >> prefix;
 	while (true)
 	{
 		std::string next;
 		ss >> next;
 		if (next.empty())
 			break ;
-		if (was_prefix and next.at(0) == ':')
+		if (next.at(0) == ':')
 		{
-			std::string last;
-			std::getline(ss, last);
-			next += last;
+			std::string remaining;
+			std::getline(ss, remaining);
+			next += remaining;
 		}
 		out.push_back(next);
-		was_prefix = true;
 	}
 	return out;
 }

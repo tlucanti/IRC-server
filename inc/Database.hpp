@@ -22,6 +22,7 @@
 # include "Channel.hpp"
 # include "Socket.hpp"
 # include "InviteNode.hpp"
+# include "Mutex.hpp"
 
 namespace tlucanti
 {
@@ -44,6 +45,7 @@ namespace tlucanti
 		__WUR bool make_edge(const std::string &nickname, const Socket &sock);
 		void make_invite(const User &user, const Channel &channel);
 		void remove_invite(const User &user, const Channel &channel);
+		void remove_invite(const InviteNode &inv);
 		__WUR bool has_invite(const User &user, const Channel &channel);
 
 		void send_to_all(const std::string &message) const;
@@ -67,6 +69,11 @@ namespace tlucanti
 		string_hashmap_type		str_access;
 		channel_container_type	channels;
 		invite_table_type		invite_table;
+
+		friend void *invite_thread(void *);
+		friend void *ping_thread(void *);
+
+		mutable Mutex invite_mutex;
 
 	__DELETED_MEMBERS:
 		Database(const Database &) __DELETE
