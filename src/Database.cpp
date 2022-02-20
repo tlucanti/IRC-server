@@ -75,7 +75,7 @@ void
 tlucanti::Database::make_invite(const User &user, const Channel &channel)
 {
 	invite_mutex.lock();
-	time_t expiration = time(nullptr) + 60;
+	time_t expiration = time(nullptr) + tlucanti::invite_expiration;
 	InviteNode invitation = InviteNode(&user, &channel, expiration);
 	invite_table.insert(invitation);
 	invite_mutex.unlock();

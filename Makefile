@@ -6,7 +6,7 @@
 #    By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/11/08 14:54:30 by kostya            #+#    #+#              #
-#    Updated: 2022/02/14 19:36:11 by tlucanti         ###   ########.fr        #
+#    Updated: 2022/02/20 18:19:16 by tlucanti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,17 +25,18 @@ SCRS_DIR	=	src
 DEPS_DIR	=	dep
 # ------------------------------- project sorces -------------------------------
 SRCS		=	\
-				Channel				\
-				Database			\
-				IRCException		\
 				IRCParser			\
-				IRCParser_compose	\
-				IRCcodes			\
-				Server				\
+				Mutex				\
 				Socket				\
+				Channel				\
+				IRCParser_compose	\
+				server_utils		\
+				IRCcodes			\
+				Database			\
 				User				\
+				IRCException		\
 				main				\
-				server_utils
+				Server
 
 # ======================= UNCHANGEABLE PART OF MAKEFILE ========================
 # ------------------------------------------------------------------------------

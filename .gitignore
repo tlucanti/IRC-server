@@ -4,3 +4,4 @@ ircserv
 .gdb_history
 .idea
 cmake-build-debug
+.DS_Store

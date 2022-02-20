@@ -1,7 +1,7 @@
 
 # IRC C++ SERVER
 
-## Availiable Server commands
+## Availiable User commands
 
 ## PASS
 #### \[:USERNAME\] PASS PASSWORD
@@ -220,13 +220,25 @@
 ### WHO TARGET
 > 
 
+## ISON
+### WHO TARGET_LIST
+
 ## KILL
 ### KILL USERNAME REASON
 > send message `REASON` to user `USERNAME` and breaks connection with him, user
 > `USERNAME` can login again
+
+## BAN
+### BAN USERNAME
 
 ## RESTART
 
 ## SQUIT
 
 ## TIME
+
+# File Transfer
+
+## Availiable Server commands
+
+## DCC 

@@ -13,7 +13,6 @@
 #include "../inc/Server.hpp"
 #include "../inc/Color.hpp"
 #include "../inc/Database.hpp"
-#include "../inc/Converter.hpp"
 
 #include <string>
 
@@ -33,7 +32,9 @@ namespace tlucanti
 
 	std::string server_password;
 	std::string server_begining;
-	unsigned short server_port;
+	unsigned short	server_port;
+	unsigned int	invite_expiration = 60;
+	unsigned int	ping_expiration = 255;
 
 	const unsigned int channel_max_users = 500;
 	const unsigned int chanel_max_name_len = 50;
@@ -41,8 +42,9 @@ namespace tlucanti
 	const unsigned int user_max_channels = 32;
 	const unsigned int user_max_nick_len = 20;
 
-	namespace IRC
-	{
+	Mutex ping_mutex;
+
+	namespace IRC {
 		const std::string endl = "\n";
 	}
 }
@@ -61,11 +63,11 @@ get_current_time()
 	struct tm tstruct = *localtime(&now);
 	bzero(buf, sizeof(buf));
 	strftime(buf, sizeof(buf) / sizeof(char), "%d", &tstruct);
-	ret += day[static_cast<int>(tlucanti::Converter<char *>(buf))];
+	ret += day[tlucanti::lexical_cast<int>(buf)];
 	bzero(buf, sizeof(buf));
 	strftime(buf, sizeof(buf) / sizeof(char), "%m", &tstruct);
 	ret += ' ';
-	ret += month[static_cast<int>(tlucanti::Converter<char *>(buf))];
+	ret += month[tlucanti::lexical_cast<int>(buf)];
 	bzero(buf, sizeof(buf));
 	strftime(buf, sizeof(buf) / sizeof(char), "%d", &tstruct);
 	ret += ' ';
@@ -99,7 +101,12 @@ void check_args(int argc, const char *const *argv)
 	{
 		tlucanti::server_password = argv[2];
 		tlucanti::server_begining = get_current_time();
-		tlucanti::server_port = atoi(argv[1]); // make normal string -> int
+		try {
+			tlucanti::server_port = tlucanti::lexical_cast<unsigned short>(argv[1]);
+		} catch(tlucanti::bad_lexical_cast &exc)
+		{
+			throw tlucanti::IRCException("lexical_cast", exc.what());
+		}
 		tlucanti::server_run = 0;
 	}
 }

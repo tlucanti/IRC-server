@@ -28,7 +28,6 @@
 # include "IRCException.hpp"
 # include "parser_utils.hpp"
 # include "IRCrpl.hpp"
-# include "Converter.hpp"
 
 namespace tlucanti
 {
@@ -71,6 +70,7 @@ namespace tlucanti
 		arg_list_type modes_list;
 		int has_suffix;
 		bool has_preffix;
+		bool dcc;
 		User *user;
 
 		__WUR std::string compose_cap() const;
@@ -106,12 +106,16 @@ namespace tlucanti
 		__WUR std::string compose_notice() const;
 
 		__WUR std::string compose_who() const;
+		__WUR std::string compose_ison();
 
 		__WUR std::string compose_kill() const;
 		__WUR std::string compose_restart() const;
 		__WUR std::string compose_squit() const;
 
+		__WUR std::string compose_dcc(const std::string &message);
+
 		std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
+		void check_format_single(const std::string &arg, const std::string &format);
 		void check_format__macro(arg_list_type &_line, arg_list_type &_fmt);
 
 		static const char *PRINTABLE;

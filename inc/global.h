@@ -13,6 +13,8 @@
 #ifndef GLOBAL_H
 # define GLOBAL_H
 
+# include "Mutex.hpp"
+
 namespace tlucanti
 {
 	extern sig_atomic_t server_run;
@@ -26,12 +28,16 @@ namespace tlucanti
 	extern std::string server_password;
 	extern std::string server_begining;
 	extern unsigned short server_port;
+	extern unsigned int	invite_expiration;
+	extern unsigned int	ping_expiration;
 
 	extern const unsigned int channel_max_users;
 	extern const unsigned int chanel_max_name_len;
 	extern const unsigned int channel_max_topic_len;
 	extern const unsigned int user_max_channels;
 	extern const unsigned int user_max_nick_len;
+
+	extern Mutex ping_mutex;
 
 	namespace IRC
 	{

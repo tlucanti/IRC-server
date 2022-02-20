@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../inc/IRCParser.hpp"
+#include "../inc/lexical_cast.hpp"
 
 namespace tlucanti {
 	extern Database database;
@@ -63,25 +64,16 @@ tlucanti::IRCParser::compose_user() const
 	user->assert_mode("nick+");
 	user->assert_mode("reg-");
 	user->make_user(nickname, realname);
-	user->send_message(IRC::RPL_WELCOME(*user));
-	user->send_message(IRC::RPL_YOURHOST(*user));
-	user->send_message(IRC::RPL_CREATED(*user));
-	user->send_message(IRC::RPL_MYINFO(*user, User::modes, Channel::modes));
-	user->send_message(compose_version());
-	user->send_message(IRC::RPL_LUSERCLIENT(*user, database.get_user_cnt(), database.invisible_users, database.get_chan_cnt()));
-	user->send_message(IRC::RPL_LUSEROP(*user, database.operators_cnt));
-	user->send_message(IRC::RPL_LUSERCHANNELS(*user, database.get_chan_cnt()));
-	user->send_message(IRC::RPL_LUSERME(*user, database.get_user_cnt(), 1));
-	user->send_message(IRC::RPL_LOCALUSERS(*user, database.get_user_cnt(), database.max_users));
-	user->send_message(IRC::RPL_GLOBALUSERS(*user, database.get_user_cnt(), database.max_users));
-	user->send_message(compose_motd());
-	user->send_message(IRC::compose_message(*user, "MODE", *user, user->get_modes()));
+	user->do_ping();
+	return "";
+
 	return "";
 }
 
 __WUR
 std::string
-tlucanti::IRCParser::compose_ping() const
+tlucanti::IRCParser::
+compose_ping() const
 {
 	#warning "implement compose_ping";
 	ABORT("implement ping", "");
@@ -91,8 +83,26 @@ __WUR
 std::string
 tlucanti::IRCParser::compose_pong() const
 {
-	#warning "implement compose_pong";
-	ABORT("implement ping", "");
+	if (user->has_mode("ping+") and user->check_ping(message))
+		user->reset_ping();
+	if (user->reg_waiting())
+	{
+		user->send_message(IRC::RPL_WELCOME(*user));
+		user->send_message(IRC::RPL_YOURHOST(*user));
+		user->send_message(IRC::RPL_CREATED(*user));
+		user->send_message(IRC::RPL_MYINFO(*user, User::modes, Channel::modes));
+		user->send_message(compose_version());
+		user->send_message(IRC::RPL_LUSERCLIENT(*user, database.get_user_cnt(), database.invisible_users, database.get_chan_cnt()));
+		user->send_message(IRC::RPL_LUSEROP(*user, database.operators_cnt));
+		user->send_message(IRC::RPL_LUSERCHANNELS(*user, database.get_chan_cnt()));
+		user->send_message(IRC::RPL_LUSERME(*user, database.get_user_cnt(), 1));
+		user->send_message(IRC::RPL_LOCALUSERS(*user, database.get_user_cnt(), database.max_users));
+		user->send_message(IRC::RPL_GLOBALUSERS(*user, database.get_user_cnt(), database.max_users));
+		user->send_message(compose_motd());
+		user->send_message(IRC::compose_message(*user, "MODE", *user, user->get_modes()));
+		user->complete_user();
+	}
+	return "";
 }
 
 __WUR
@@ -606,8 +616,10 @@ tlucanti::IRCParser::compose_mode_single()
 				return IRC::ERR_NEEDMOREPARAMS(*user, "MODE", "expected channel password");
 			unsigned int n;
 			try {
-				n = static_cast<int>(tlucanti::Converter<std::string>(message));
-			} catch (std::invalid_argument &) {
+				n = lexical_cast<int>(message);
+				if (n <= 0 or n > 500)
+					return IRC::ERR_INVALIDMODEPARAM(*user, *chan, mode.at(0), message, "limit value should be in range [1:500]");
+			} catch (tlucanti::bad_lexical_cast &) {
 				return IRC::ERR_INVALIDMODEPARAM(*user, *chan, mode.at(0), message, "invalid limit value");
 			}
 			chan->make_limit(n);
@@ -691,7 +703,8 @@ tlucanti::IRCParser::compose_privmsg() const
 		User *cli = database[*it];
 		if (cli == nullptr)
 			user->send_message(IRC::ERR_NOSUCHNICK(*user, *it, "user with nickname"));
-		cli->send_message(IRC::RPL_AWAY(*user, *cli, message));
+		else
+			cli->send_message(IRC::RPL_AWAY(*user, *cli, message));
 	}
 	it = chan_list.begin();
 	for (; it != chan_list.end(); ++it)
@@ -736,6 +749,21 @@ __WUR
 std::string
 tlucanti::IRCParser::compose_who() const
 {
+//	{
+//		User *tar = database[target];
+//		if (tar == nullptr)
+//			std::cout << "target not found\n";
+//
+//		int peer_sock = tar->get_sock().get_sock();
+//		char ip_str[INET_ADDRSTRLEN];
+//		struct sockaddr_storage peer_addr {};
+//		socklen_t len = sizeof peer_addr;
+//		getpeername(peer_sock, reinterpret_cast<sockaddr *>(&peer_addr), &len);
+//
+//		if (::bind(user->get_sock().get_sock(), reinterpret_cast<const sockaddr *>(&peer_addr), sizeof(peer_addr)))
+//			perror("");
+//		return "";
+//	}
 	bool chan_who = target.at(0) == '#' or target.at(0) == '&';
 
 	user->assert_mode("reg+");
@@ -761,6 +789,22 @@ tlucanti::IRCParser::compose_who() const
 		user->send_message(IRC::RPL_WHOREPLY(*user, dynamic_cast<const User &>(*tar), '*'));
 	}
 	return IRC::RPL_ENDOFWHO(*user, target);
+}
+
+__WUR
+std::string
+tlucanti::IRCParser::compose_ison()
+{
+	user->assert_mode("reg+");
+
+	arg_list_type::iterator it = user_list.begin();
+	for(; it != user_list.end(); ++it)
+	{
+		User *tar = database[*it];
+		if (tar == nullptr)
+			it = --user_list.erase(it);
+	}
+	return IRC::RPL_ISON(*user, user_list);
 }
 
 // ----------------------------- Operator Messages -----------------------------

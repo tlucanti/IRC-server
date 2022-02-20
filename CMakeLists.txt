@@ -4,6 +4,7 @@ project(irc)
 set(CMAKE_CXX_STANDARD 23)
 
 add_executable(irc
+	inc/lexical_cast.hpp
 	inc/SocketException.hpp
 	inc/defs.h
 	inc/IRCException.hpp
@@ -13,7 +14,6 @@ add_executable(irc
 	inc/Database.hpp
 	inc/ITarget.hpp
 	inc/User.hpp
-	inc/Converter.hpp
 	inc/Socket.hpp
 	inc/Channel.hpp
 	inc/InviteNode.hpp
@@ -28,6 +28,7 @@ add_executable(irc
 
 	src/IRCParser.cpp
 	src/Mutex.cpp
+	src/IRCParser_dcc_compose.cpp
 	src/Socket.cpp
 	src/Channel.cpp
 	src/IRCParser_compose.cpp

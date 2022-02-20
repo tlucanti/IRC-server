@@ -1,40 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Mutex.hpp                                          :+:      :+:    :+:   */
+/*   IRCParser_dcc_compose.cpp                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/02/17 17:42:31 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/17 17:48:34 by tlucanti         ###   ########.fr       */
+/*   Created: 2022/02/20 22:48:46 by tlucanti          #+#    #+#             */
+/*   Updated: 2022/02/20 22:49:11 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef MUTEX_HPP
-# define MUTEX_HPP
+#include "../inc/IRCParser.hpp"
 
-# include <pthread.h>
-
-# include "defs.h"
-
-namespace tlucanti
+__WUR
+std::string
+tlucanti::IRCParser::compose_dcc(const std::string &message)
 {
-	class Mutex
-	{
-	public:
-		Mutex() noexcept;
-		~Mutex();
-		void lock();
-		bool try_lock();
-		void unlock();
-
-	private:
-		pthread_mutex_t		_mutex_v_;
-
-	__DELETED_MEMBERS:
-		Mutex(const Mutex &) __DELETE
-		Mutex &operator =(const Mutex &) __DELETE
-	};
+	return "";
 }
-
-#endif /* MUTEX_HPP */

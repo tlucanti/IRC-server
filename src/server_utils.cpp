@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 13:32:57 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/06 17:43:52 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/19 17:28:34 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,8 @@ namespace tlucanti
 				cached.erase(client);
 			std::vector<std::string> commands;
 			split(request, commands, '\n');
-			for (std::vector<std::string>::iterator it=commands.begin(); it != commands.end(); ++it)
+			std::vector<std::string>::iterator it=commands.begin();
+			for (; it != commands.end(); ++it)
 			{
 				if (it->empty())
 					continue ;
@@ -99,44 +100,42 @@ namespace tlucanti
 		int wait = 0;
 		while (!tlucanti::server_run)
 		{
-			if (wait < 10)
-			{
-				sleep(1);
+			++wait;
+			sleep(1);
+			if (wait < 20)
 				continue ;
-			}
-			else
-				wait = 0;
+			wait = 0;
 			Database::sock_hashmap_type::const_iterator it = database.sock_access.begin();
+			ping_mutex.lock();
 			for (; it != database.sock_access.end(); ++it)
 			{
 				User *user = it->second;
-				if (not user->ping_waiting and time(nullptr) > user->last_ping + 60)
+				std::cout << *user << ' ' << user->ping_waiting << std::endl;
+				if (not user->ping_waiting and user->has_mode("reg+") and time(nullptr) > user->last_ping + 60)
+					user->do_ping();
+				else if (user->ping_waiting and time(nullptr) > user->last_ping + tlucanti::ping_expiration)
 				{
-					std::stringstream ss;
-					ull ping_message = ((ull)rand() << 32) + (ull)rand();
-					ss << "PING :" << ping_message << IRC::endl;
-					user->send_message(ss.str());
-					user->ping_waiting = true;
-					user->ping_message = ping_message;
-					user->last_ping = time(nullptr);
-				}
-				else if (user->ping_waiting and time(nullptr) > user->last_ping + 250)
-				{
-					user->send_to_channels(IRC::compose_message(user->compose(), "QUIT", "", "Ping timeout: 255 seconds"));
-					user->send_message(IRC::ERROR("Ping timeout: 255 seconds"));
+					std::string message = "Ping timeout: " + numeric_cast<std::string>(255) + " seconds";
+					user->send_to_channels(IRC::compose_message(user->compose(), "QUIT", "", message));
+					user->send_message(IRC::ERROR(message));
 					database.remove_client(*(it->second));
 				}
 			}
+			ping_mutex.unlock();
 		}
 		return nullptr;
 	}
 
 	std::string make_response(const Socket &client, const std::string &request)
 	{
+		ping_mutex.lock();
+		std::string response;
 		try {
-			return IRCParser(request).exec(client);
+			response = IRCParser(request).exec(client);
 		} catch (IRCParserException &exc) {
-			return exc.what();
+			response = exc.what();
 		}
+		ping_mutex.unlock();
+		return response;
 	}
 }

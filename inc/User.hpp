@@ -26,6 +26,7 @@
 # include "IRCcodes.h"
 # include "IRCrpl.hpp"
 # include "Channel.hpp"
+# include "lexical_cast.hpp"
 
 namespace tlucanti
 {
@@ -55,6 +56,11 @@ namespace tlucanti
 
 		void make_nickname(const std::string &nickname);
 		void make_user(const std::string &nickname, const std::string &realname);
+		void complete_user();
+		__WUR bool inline reg_waiting() const { return register_waiting; }
+		void reset_ping();
+		void do_ping();
+		__WUR bool check_ping(const std::string &ping) const;
 
 		__WUR const std::string &get_name() const override { return _nickname; }
 		__WUR inline const std::string &get_username() const { return  _username; }
@@ -81,6 +87,7 @@ namespace tlucanti
 		time_t last_ping;
 		unsigned long long ping_message;
 		bool ping_waiting;
+		bool register_waiting;
 
 		channels_list channels_member;
 

@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/17 14:59:04 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/20 21:33:27 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -323,6 +323,30 @@ namespace tlucanti::IRC
 		std::stringstream ss;
 		ss << ':' << target.compose() << " PRIVMSG " <<
 			recepient << " :" << message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T, typename list_T>
+	__WUR inline
+	std::string
+	RPL_ISON(const target_T &target, const list_T &user_list)
+	/*
+		:`SERVER` 303 `TARGET` :`USER_LIST`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_ISON <<
+			' ' << target << " :";
+		bool first = true;
+		typename list_T::const_iterator it = user_list.begin();
+		for (; it != user_list.end(); ++it)
+		{
+			if (not first)
+				ss << ' ';
+			ss << *it;
+			first = false;
+		}
+		ss << IRC::endl;
 		return ss.str();
 	}
 
@@ -846,14 +870,15 @@ namespace tlucanti::IRC
 	template <typename target_T>
 	__WUR inline
 	std::string
-	ERR_NOTREGISTERED(const target_T &target)
+	ERR_NOTREGISTERED(const target_T &target, const std::string &what)
 	/*
 		:`SERVER` 451 `TARGET` :You need to register
 	*/
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' <<
-			IRCcodes::ERR_NOTREGISTERED << ' ' << target << " :You need to register to use this command" << IRC::endl;
+			IRCcodes::ERR_NOTREGISTERED << ' ' << target << " :You need to " <<
+			what << " to use this command" << IRC::endl;
 		return ss.str();
 	}
 

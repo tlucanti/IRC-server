@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/15 17:34:03 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/17 14:54:25 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/20 21:34:41 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,10 @@ void test_rpl()
 	NAMREPLY_user_list.push_back(&u1);
 	NAMREPLY_user_list.push_back(&u2);
 	NAMREPLY_user_list.push_back(&u3);
+	std::list<const char *>ISON_user_list;
+	ISON_user_list.push_back(u1);
+	ISON_user_list.push_back(u2);
+	ISON_user_list.push_back(u3);
 	RPL_test_Target NAMREPLY_tar;
 
 	RPL_test(compose_message("FROM", "COMMAND", "TO", "MESSAGE"));
@@ -86,6 +90,7 @@ void test_rpl()
 	RPL_test(RPL_LOCALUSERS("TARGET", 123, 456));
 	RPL_test(RPL_GLOBALUSERS("TARGET", 123, 456));
 	RPL_test(RPL_AWAY(NAMREPLY_tar, "RECIPIENT", "MESSAGE"));
+	RPL_test(RPL_ISON("TARGET", ISON_user_list));
 	RPL_test(RPL_ENDOFWHO("TARGET", "WHO"));
 	RPL_test(RPL_LISTSTART("TARGET"));
 	RPL_test(RPL_LIST("TARGET", "CHANNEL", 999, "TOPIC"));
@@ -118,7 +123,7 @@ void test_rpl()
 	RPL_test(ERR_USERNOTINCHANNEL("TARGET", "USER", "CHANNEL"));
 	RPL_test(ERR_NOTONCHANNEL("TARGET", "CHANNEL"));
 	RPL_test(ERR_USERONCHANNEL("TARGET", "USER", "CHANEL"));
-	RPL_test(ERR_NOTREGISTERED("TARGET"));
+	RPL_test(ERR_NOTREGISTERED("TARGET", "WHAT"));
 	RPL_test(ERR_NEEDMOREPARAMS("TARGET", "COMMAND", "MESSAGE"));
 	RPL_test(ERR_ALREADYREGISTERED("TARGET"));
 	RPL_test(ERR_PASSWDMISMATCH("TARGET"));

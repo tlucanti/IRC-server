@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 10:35:49 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/16 18:44:47 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/20 22:49:19 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,19 +22,20 @@ namespace tlucanti {
 }
 
 tlucanti::IRCParser::IRCParser(const std::string &raw_command) :
-	prefix("UNINITIALIZED_PREFFIX"),
-	command("UNINITIALIZED_COMMAND"),
-	nickname("UNINITIALIZED_NICKNAME"),
-	password("UNINITIALIZED_PASSWORD"),
-	realname("UNINITIALIZED_REALNAME"),
-	message("UNINITIALIZED_MESSAGE"),
-	channel("UNINITIALIZED_CHANNEL"),
-	mode("UNINITIALIZED_MODESTRING"),
-	target("UNINITIALIZED_TARGET"),
-	_raw_command(raw_command),
-	has_suffix(false),
-	has_preffix(false),
-	user(nullptr) {}
+		prefix("UNINITIALIZED_PREFFIX"),
+		command("UNINITIALIZED_COMMAND"),
+		nickname("UNINITIALIZED_NICKNAME"),
+		password("UNINITIALIZED_PASSWORD"),
+		realname("UNINITIALIZED_REALNAME"),
+		message("UNINITIALIZED_MESSAGE"),
+		channel("UNINITIALIZED_CHANNEL"),
+		mode("UNINITIALIZED_MODESTRING"),
+		target("UNINITIALIZED_TARGET"),
+		_raw_command(raw_command),
+		has_suffix(false),
+		has_preffix(false),
+		user(nullptr),
+		dcc(false) {}
 
 void
 tlucanti::IRCParser::init()
@@ -243,6 +244,8 @@ tlucanti::IRCParser::parse()
 			++add;
 		target = line.at(1 + add);
 	}
+	else if (command == "ISON")
+		check_format(line, "[:nick]", "cmd", "user_sequence");
 // ----------------------------- Operator Messages -----------------------------
 	else if (command == "KILL")
 	{
@@ -265,7 +268,7 @@ tlucanti::IRCParser::exec(const Socket &client)
 	{
 		user = database[prefix];
 		if (user == nullptr)
-			return IRC::ERR_NOSUCHNICK(database[client], prefix, "user with nickname");
+			return IRC::ERR_NOSUCHNICK(database[prefix], prefix, "user with nickname");
 	}
 	else
 		user = database[client];
@@ -274,6 +277,10 @@ tlucanti::IRCParser::exec(const Socket &client)
 	if (command.empty())
 		return "";
 	parse();
+//	if ((command == "PRIVMSG" or command == "NOTICE") and dcc)
+//		return compose_dcc(message);
+//	else if (dcc)
+//		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message can contain only printable characters"));
 
 
 // ---------------------------- Connection Messages ----------------------------
@@ -333,6 +340,8 @@ tlucanti::IRCParser::exec(const Socket &client)
 // ---------------------------- User-Based Queries -----------------------------
 	else if (command == "WHO")
 		return compose_who();
+	else if (command == "ISON")
+		return compose_ison();
 // ----------------------------- Operator Messages -----------------------------
 	else if (command == "KILL")
 		return compose_kill();
@@ -368,6 +377,16 @@ tlucanti::IRCParser::split_string(const std::string &str, arg_list_type &out)
 		out.push_back(next);
 	}
 	return out;
+}
+
+void
+tlucanti::IRCParser::check_format_single(const std::string &arg, const std::string &format)
+{
+	arg_list_type _line;
+	_line.push_back(arg);
+	arg_list_type _fmt;
+	_fmt.push_back(format);
+	check_format__macro(_line, _fmt);
 }
 
 void
@@ -438,6 +457,12 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 		}
 		else if (*format_i == ":msg")
 		{
+			if (line_i->size() >= 3 and line_i->at(1) == 1 and line_i->at(line_i->size() - 1) == 1) // DCC message
+			{
+				line_i->erase(0, 1);
+				dcc = true;
+				return ;
+			}
 			if (not contains_only(*line_i, IRCParser::PRINTABLESPACE))
 				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message can contain only printable characters"));
 			if (line_i->at(0) == ':')
@@ -450,9 +475,7 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			arg_list_type::iterator it=split_list.begin();
 			for (; it != split_list.end(); ++it)
 			{
-				arg_list_type split_elem;
-				split_elem.push_back(*it);
-				check_format(split_elem, "chan");
+				check_format_single(*it, "chan");
 				chan_list.push_back(*it);
 			}
 		}
@@ -463,9 +486,7 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			arg_list_type::iterator it=split_list.begin();
 			for (; it != split_list.end(); ++it)
 			{
-				arg_list_type split_elem;
-				split_elem.push_back(*it);
-				check_format(split_elem, "nick");
+				check_format_single(*it, "nick");
 				user_list.push_back(*it);
 			}
 		}
@@ -474,26 +495,29 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			arg_list_type split_list;
 			split(*line_i, split_list, ',');
 			for (arg_list_type::iterator it=split_list.begin(); it != split_list.end(); ++it)
-			{
-				arg_list_type split_elem;
-				split_elem.push_back(*it);
-				check_format(split_elem, "target");
-			}
+				check_format_single(*it, "target");
 		}
 		else if (*format_i == "target")
 		{
-			arg_list_type split_elem;
-			split_elem.push_back(*line_i);
 			if (line_i->at(0) == '#' or line_i->at(0) == '&')
 			{
-				check_format(split_elem, "chan");
+				check_format_single(*line_i, "chan");
 				chan_list.push_back(*line_i);
 			}
 			else
 			{
-				check_format(split_elem, "nick");
+				check_format_single(*line_i, "nick");
 				user_list.push_back(*line_i);
 			}
+		}
+		else if (*format_i == "user_sequence")
+		{
+			for (; line_i != line.end(); ++line_i)
+			{
+				check_format_single(*line_i, "nick");
+				user_list.push_back(*line_i);
+			}
+			return ;
 		}
 		else if (*format_i == "[:nick]")
 		{
@@ -511,7 +535,8 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 		{
 			arg_list_type split_list;
 			split(*line_i, split_list, ',');
-			for (arg_list_type::iterator it=split_list.begin(); it != split_list.end(); ++it)
+			arg_list_type::iterator it=split_list.begin();
+			for (; it != split_list.end(); ++it)
 			{
 				arg_list_type split_elem;
 				split_elem.push_back(*it);
@@ -543,5 +568,5 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			ABORT("unknown specifier", *format_i);
 	}
 	if (line_i != _line.end())
-		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command ignored€: " + *line_i));
+		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command ignored: " + *line_i));
 }
