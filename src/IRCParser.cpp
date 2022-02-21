@@ -119,6 +119,8 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected command"));
 			else if (*format_i == "pass")
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted password"));
+			else if (*format_i == ":pass")
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted password"));
 			else if (*format_i == "nick")
 				throw IRCParserException(IRC::ERR_NONICKNAMEGIVEN(*user));
 			else if (*format_i == "str")
@@ -147,6 +149,12 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected password, not message suffix"));
 			if (not contains_only(*line_i, IRCParser::PRINTABLE))
 				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message can contain only printable characters with no spaces"));
+		}
+		else if (*format_i == ":pass")
+		{
+			if (line_i->at(0) == ':')
+				line_i->erase(0, 1);
+			check_format_single(*line_i, "pass");
 		}
 		else if (*format_i == "nick")
 		{

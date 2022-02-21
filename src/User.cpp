@@ -81,8 +81,6 @@ tlucanti::User::check_ping(const std::string &ping) const
 		return false;
 	}
 	std::cout << p << " == " << ping_message << "\n";
-	return true;
-# warning "remove this"
 	return p == ping_message;
 }
 

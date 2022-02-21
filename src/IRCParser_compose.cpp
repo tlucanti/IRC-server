@@ -66,8 +66,6 @@ tlucanti::IRCParser::compose_user() const
 	user->make_user(nickname, realname);
 	user->do_ping();
 	return "";
-
-	return "";
 }
 
 __WUR
@@ -75,16 +73,19 @@ std::string
 tlucanti::IRCParser::
 compose_ping() const
 {
-	#warning "implement compose_ping";
-	ABORT("implement ping", "");
+	return IRC::compose_message(nullptr, "PONG", tlucanti::server_name, message);
 }
 
 __WUR
 std::string
 tlucanti::IRCParser::compose_pong() const
 {
-	if (user->has_mode("ping+") and user->check_ping(message))
-		user->reset_ping();
+	if (user->has_mode("ping+"))
+	{
+		if (user->check_ping(message))
+			user->reset_ping();
+		user->assert_mode("ping-");
+	}
 	if (user->reg_waiting())
 	{
 		user->send_message(IRC::RPL_WELCOME(*user));

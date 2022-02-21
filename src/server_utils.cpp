@@ -70,7 +70,6 @@ namespace tlucanti
 				if (it->empty())
 					continue ;
 
-				std::cout << "data from client " << client.get_sock() << " (" << it->size() << "): <" << strip(*it) << ">\n";
 				std::string response = make_response(client, *it);
 				if (not response.empty())
 					client.send(response);
@@ -111,7 +110,7 @@ namespace tlucanti
 			{
 				User *user = it->second;
 				std::cout << *user << ' ' << user->ping_waiting << std::endl;
-				if (not user->ping_waiting and user->has_mode("reg+") and time(nullptr) > user->last_ping + 60)
+				if (not user->ping_waiting and user->has_mode("reg+") and time(nullptr) > user->last_ping + 180)
 					user->do_ping();
 				else if (user->ping_waiting and time(nullptr) > user->last_ping + tlucanti::ping_expiration)
 				{

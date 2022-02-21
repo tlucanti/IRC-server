@@ -32,8 +32,11 @@ tlucanti::IRCParser::exec(const Socket &client)
 	if (command.empty())
 		return "";
 	parse();
-//	if ((command == "PRIVMSG" or command == "NOTICE") and dcc)
+	if ((command == "PRIVMSG" or command == "NOTICE") and dcc)
+	{
+		std::cout << "User ip: " << user->get_sock().get_address() << ':' << user->get_sock().get_port() << std::endl;
 //		return compose_dcc(message);
+	}
 //	else if (dcc)
 //		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message can contain only printable characters"));
 

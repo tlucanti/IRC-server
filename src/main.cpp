@@ -45,7 +45,7 @@ namespace tlucanti
 	Mutex ping_mutex;
 
 	namespace IRC {
-		const std::string endl = "\n";
+		const std::string endl = "\r\n";
 	}
 }
 
@@ -55,7 +55,6 @@ get_current_time()
 {
 	const char *month[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September",
 						   "October", "November", "December"};
-	const char *day[] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 	char buf[100] = {};
 	std::string ret;
 

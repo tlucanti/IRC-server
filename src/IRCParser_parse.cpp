@@ -46,7 +46,7 @@ tlucanti::IRCParser::parse()
 	}
 	else if (command == "PONG")
 	{
-		check_format(line, "[:nick]", "cmd", "pass");
+		check_format(line, "[:nick]", "cmd", ":pass");
 		message = line.at(1);
 	}
 	else if (command == "OPER")
