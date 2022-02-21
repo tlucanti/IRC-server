@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 14:20:18 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/16 18:51:51 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/21 13:51:02 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,15 +45,15 @@ namespace tlucanti
 		typedef std::vector<std::string>	arg_list_type;
 
 		IRCParser(const std::string &raw_command);
-
 		std::string exec(const Socket &client);
+
+	protected:
 		std::string		prefix;
 		std::string		command;
 
 		arg_list_type	arguments;
 		arg_list_type	line;
 
-	private:
 		void init();
 		void parse();
 
@@ -71,6 +71,8 @@ namespace tlucanti
 		int has_suffix;
 		bool has_preffix;
 		bool dcc;
+
+	private:
 		User *user;
 
 		__WUR std::string compose_cap() const;

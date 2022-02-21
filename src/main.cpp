@@ -63,7 +63,7 @@ get_current_time()
 	struct tm tstruct = *localtime(&now);
 	bzero(buf, sizeof(buf));
 	strftime(buf, sizeof(buf) / sizeof(char), "%d", &tstruct);
-	ret += day[tlucanti::lexical_cast<int>(buf)];
+	ret += buf;
 	bzero(buf, sizeof(buf));
 	strftime(buf, sizeof(buf) / sizeof(char), "%m", &tstruct);
 	ret += ' ';

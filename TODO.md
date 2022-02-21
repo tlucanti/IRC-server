@@ -7,14 +7,13 @@
 - clang tidy
 - c++98 compile
 - reformat tlucanti::IRCParser::parse and remove if/else
-- make invalid port checker in argv
 - make change nickname nice message
 - write 001 instead 1 in IRC code response
-- ping - pong
 - server ping response
 
 ### NOW
 
+- file transfer
 - write all commands in README.md
 - fix WHO command realname
 - add all commands from README.md
@@ -23,6 +22,8 @@
 
 ### DONE
 
+- make invalid port checker in argv
+- ping - pong
 - debug web
 - makefile
 - irc command parcer
@@ -31,10 +32,11 @@
 
 ### COMMITS 
 
-5737
+6522
 
-|	+8447	|	-2470	|
+|	+9187	|	-2665	|
 |-----------|-----------|
+|	+740	|	-195	|
 |	+328	|	-88		|
 |	+1300	|	-407	|
 |	+457	|	-103	|

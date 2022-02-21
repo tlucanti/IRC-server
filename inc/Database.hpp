@@ -26,8 +26,6 @@
 
 namespace tlucanti
 {
-	class User;
-	class Channel;
 	class Database
 	{
 	public:

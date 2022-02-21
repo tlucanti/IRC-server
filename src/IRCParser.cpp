@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/05 10:35:49 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/20 22:49:19 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/21 13:56:19 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,301 +58,14 @@ tlucanti::IRCParser::init()
 	else
 		_raw_command = _command_part;
 	split_string(_raw_command, line);
-	has_suffix = false;
 
 	if (line.empty() or (line.size() == 1 and has_preffix))
 		throw IRCParserException("");
 
 	arg_list_type::iterator it = line.begin();
-	if (has_preffix)
-		prefix = *(it++);
-	command = *it; // iterator will valid because line.size() >= 1 (or >= 2 with prefix)
+	command = *it; // iterator will valid because line.size() >= 1
 	while (++it != line.end())
 		arguments.push_back(*it);
-}
-
-
-void
-tlucanti::IRCParser::parse()
-{
-	typedef const char *fmt_t[];
-
-	// reformat this function and remove if/else
-	std::transform(command.begin(), command.end(), command.begin(), ::toupper);
-
-// ---------------------------- Connection Messages ----------------------------
-	if (command == "CAP")
-	{}
-	else if (command == "PASS")
-	{
-		check_format(line, "cmd", "pass");
-		password = line.at(1);
-	}
-	else if (command == "NICK")
-	{
-		check_format(line, "[:nick]", "cmd", "nick");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		nickname = line.at(1 + add);
-	}
-	else if (command == "USER")
-	{
-		check_format(line, "[:nick]", "cmd", "nick", "nick", "nick", ":msg");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		nickname = line.at(1 + add);
-		realname = line.at(4 + add);
-	}
-	else if (command == "PING")
-	{
-		check_format(line, "[:nick]", "cmd", ":pass");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		message = line.at(1 + add);
-	}
-	else if (command == "PONG")
-	{
-		check_format(line, "[:nick]", "cmd", "pass");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		message = line.at(1 + add);
-	}
-	else if (command == "OPER")
-	{
-		check_format(line, "[:nick]", "cmd", "nick", "pass");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		nickname = line.at(1 + add);
-		password = line.at(2 + add);
-	}
-	else if (command == "QUIT")
-	{
-		check_format(line, "cmd", "[:msg]");
-		if (has_suffix)
-			message = line.at(1);
-	}
-	else if (command == "ERROR")
-	{
-		check_format(line, "cmd", ":msg");
-		message = line.at(1);
-	}
-// ---------------------------- Channel Operations -----------------------------
-	else if (command == "JOIN")
-		check_format(line, "[:nick]", "cmd", "chan_list", "[pass_list]");
-	else if (command == "PART")
-	{
-		check_format(line, "[:nick]", "cmd", "chan_list", "[:msg]");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		if (has_suffix)
-			message = line.at(2 + add);
-	}
-	else if (command == "TOPIC")
-	{
-		check_format(line, "[:nick]", "cmd", "chan", "[:msg]");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		channel = line.at(1 + add);
-		if (has_suffix)
-			message = line.at(2 + add);
-	}
-	else if (command == "NAMES")
-		check_format(line, "[:nick]", "cmd", "[chan_list]");
-	else if (command == "LIST")
-		check_format(line, "[:nick]", "cmd", "[chan_list]");
-	else if (command == "INVITE")
-	{
-		check_format(line, "[:nick]", "cmd", "nick", "chan");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		nickname = line.at(1 + add);
-		channel = line.at(2 + add);
-	}
-	else if (command == "KICK")
-	{
-		check_format(line, "[:nick]", "cmd", "chan", "user_list", "[:msg]");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		channel = line.at(1 + add);
-		nickname = line.at(2 + add);
-		if (has_suffix)
-			message = line.at(3 + add);
-	}
-// ------------------------ Server Queries and Commands ------------------------
-	else if (command == "MOTD")
-		check_format(line, "[:nick]", "cmd");
-	else if (command == "VERSION")
-		check_format(line, "[:nick]", "cmd");
-	else if (command == "ADMIN")
-		check_format(line, "[:nick]", "cmd");
-	else if (command == "TIME")
-		check_format(line, "[:nick]", "cmd");
-	else if (command == "HELP")
-	{
-		check_format(line, "[:nick]", "cmd", "str");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		message = line.at(1 + add);
-	}
-	else if (command == "INFO")
-		check_format(line, "[:nick]", "cmd");
-	else if (command == "MODE")
-	{
-		check_format(line, "[:nick]", "cmd", "target", "[str]", "[mode_list]");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		target = line.at(1 + add);
-		if (has_suffix >= 1)
-			mode = line.at(2 + add);
-		else
-			mode = "";
-	}
-// ----------------------------- Sending Messages ------------------------------
-	else if (command == "PRIVMSG")
-	{
-		check_format(line, "[:nick]", "cmd", "receiver_list", ":msg");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		message = line.at(2 + add);
-	}
-	else if (command == "NOTICE")
-	{
-		check_format(line, "[:nick]", "cmd", "receiver_list", ":msg");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		message = line.at(2 + add);
-	}
-// ---------------------------- User-Based Queries -----------------------------
-	else if (command == "WHO")
-	{
-		check_format(line, "[:nick]", "cmd", "target");
-		int add = 0;
-		if (has_preffix)
-			++add;
-		target = line.at(1 + add);
-	}
-	else if (command == "ISON")
-		check_format(line, "[:nick]", "cmd", "user_sequence");
-// ----------------------------- Operator Messages -----------------------------
-	else if (command == "KILL")
-	{
-		check_format(line, "cmd", "nick", ":msg");
-		nickname = line.at(1);
-		message = line.at(2);
-	}
-	else if (command == "RESTART")
-		check_format(line, "cmd");
-	else if (command == "SQUIT")
-		check_format(line, "cmd");
-	else
-		throw IRCParserException(IRC::ERR_UNKNOWNCOMMAND(*user, command));
-}
-
-std::string
-tlucanti::IRCParser::exec(const Socket &client)
-{
-	if (has_preffix)
-	{
-		user = database[prefix];
-		if (user == nullptr)
-			return IRC::ERR_NOSUCHNICK(database[prefix], prefix, "user with nickname");
-	}
-	else
-		user = database[client];
-
-	init();
-	if (command.empty())
-		return "";
-	parse();
-//	if ((command == "PRIVMSG" or command == "NOTICE") and dcc)
-//		return compose_dcc(message);
-//	else if (dcc)
-//		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message can contain only printable characters"));
-
-
-// ---------------------------- Connection Messages ----------------------------
-	if (command == "CAP")
-		return compose_cap();
-	if (command == "PASS")
-		return compose_pass();
-	else if (command == "NICK")
-		return compose_nick();
-	else if (command == "USER")
-		return compose_user();
-	else if (command == "PING")
-		return compose_ping();
-	else if (command == "PONG")
-		return compose_pong();
-	else if (command == "OPER")
-		return compose_oper();
-	else if (command == "QUIT")
-		return compose_quit();
-	else if (command == "ERROR")
-		return compose_error();
-// ---------------------------- Channel Operations -----------------------------
-	else if (command == "JOIN")
-		return compose_join();
-	else if (command == "PART")
-		return compose_part();
-	else if (command == "TOPIC")
-		return compose_topic();
-	else if (command == "NAMES")
-		return compose_names();
-	else if (command == "LIST")
-		return compose_list();
-	else if (command == "INVITE")
-		return compose_invite();
-	else if (command == "KICK")
-		return compose_kick();
-// ------------------------ Server Queries and Commands ------------------------
-	else if (command == "MOTD")
-		return compose_motd();
-	else if (command == "VERSION")
-		return compose_version();
-	else if (command == "ADMIN")
-		return compose_admin();
-	else if (command == "TIME")
-		return compose_time();
-	else if (command == "HELP")
-		return compose_help();
-	else if (command == "INFO")
-		return compose_info();
-	else if (command == "MODE")
-		return compose_mode();
-// ----------------------------- Sending Messages ------------------------------
-	else if (command == "PRIVMSG")
-		return compose_privmsg();
-	else if (command == "NOTICE")
-		return compose_notice();
-// ---------------------------- User-Based Queries -----------------------------
-	else if (command == "WHO")
-		return compose_who();
-	else if (command == "ISON")
-		return compose_ison();
-// ----------------------------- Operator Messages -----------------------------
-	else if (command == "KILL")
-		return compose_kill();
-	else if (command == "RESTART")
-		return compose_restart();
-	else if (command == "SQUIT")
-		return compose_squit();
-
-	else
-		ABORT("invalid command", command);
-	ABORT("implement command", command);
 }
 
 tlucanti::IRCParser::arg_list_type &
@@ -361,7 +74,10 @@ tlucanti::IRCParser::split_string(const std::string &str, arg_list_type &out)
 	std::stringstream	ss(str);
 
 	if (has_preffix)
+	{
 		ss >> prefix;
+		prefix.erase(0, 1); // remove ':' symbol
+	}
 	while (true)
 	{
 		std::string next;

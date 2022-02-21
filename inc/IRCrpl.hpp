@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/20 21:33:27 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/21 14:50:49 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 # include "parser_utils.hpp"
 # include "IRCcodes.h"
 # include "global.h"
+
+# ifndef __BOT
 
 namespace tlucanti::IRC
 {
@@ -1173,5 +1175,27 @@ namespace tlucanti::IRC
 		return ss.str();
 	}
 }
+
+# else /* defined __BOT */
+
+namespace tlucanti::IRC
+{
+	template <typename T>
+	inline std::string ERR_NEEDMOREPARAMS(__UNUSED const T&, __UNUSED std::string &, __UNUSED const std::string &) { return "need more params"; }
+	template <typename T>
+	inline std::string ERR_NONICKNAMEGIVEN(__UNUSED const T&) { return "no nickname given"; }
+	template <typename T>
+	inline std::string ERR_NOTEXTTOSEND(__UNUSED const T&) { return "no message to send"; }
+	template <typename T>
+	inline std::string ERR_NORECIPIENT(__UNUSED const T&, __UNUSED const std::string &) { return "no recepient to send"; }
+	template <typename T, typename TT>
+	inline std::string ERR_NOSUCHCHANNEL(__UNUSED const T&, __UNUSED const TT&, __UNUSED const std::string &) { return "channel name should start with # or &"; }
+	template <typename T>
+	inline std::string ERR_UNKNOWNCOMMAND(__UNUSED const T&, __UNUSED const std::string &) { return "unknown command"; }
+	template <typename T, typename TT>
+	inline std::string compose_message(__UNUSED const T&, __UNUSED const char *, __UNUSED const TT &, const std::string &_m, __UNUSED bool=false) { return _m; }
+}
+
+# endif /* __BOT */
 
 #endif /* IRCRPL_HPP */

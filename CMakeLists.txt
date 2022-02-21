@@ -34,7 +34,9 @@ add_executable(irc
 	src/IRCParser_compose.cpp
 	src/server_utils.cpp
 	src/IRCcodes.cpp
+	src/IRCParser_exec.cpp
 	src/Database.cpp
+	src/IRCParser_parse.cpp
 	src/User.cpp
 	src/IRCException.cpp
 	src/main.cpp
