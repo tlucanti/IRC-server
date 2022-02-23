@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/21 14:50:49 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/23 17:06:43 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -605,9 +605,35 @@ namespace tlucanti::IRC
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NOMOTD <<
-			' ' << target << " :[INTERNAL ERROR] MOTD file `" << fname << "` is missing" <<
-			IRC::endl;
+			' ' << target << " :[INTERNAL ERROR] MOTD file `" << fname <<
+			"` is missing" << IRC::endl;
 		return ss.str();
+	}
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_INFO(const target_T &target)
+	/*
+		:`SERVER` 371 `TARGET` :`SERVER_INFO`
+	*/
+	{
+		std::string start;
+		{
+			std::stringstream ss;
+			ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_INFO <<
+			' ' << target << " :";
+		}
+		std::stringstream ss;
+		ss << start << "Internet Relay Chat -- server" << IRC::endl;
+		ss << start << "based on IRC protocol written in 1988" << IRC::endl;
+		ss << start << IRC::endl;
+		ss << start << "This program is free software; you can redistribute it"
+			"and/or" << IRC::endl;
+		ss << start << "modify it under the terms of the MIT License" <<
+			IRC::endl;
+		ss << start << IRC::endl;
+		ss << start << ""
 	}
 
 	template <typename target_T>
@@ -679,6 +705,21 @@ namespace tlucanti::IRC
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_YOUREOPER <<
 			' ' << target << " :" << message << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_TIME(const target_T &target)
+	/*
+		:`SERVER` 391 `TARGER` `TIMESTAMP` :`HUMAN_READ_TIME`
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_TIME <<
+			' ' << target << ' ' << time(nullptr) << " :" <<
+			tlucanti::get_current_time() << IRC::endl;
 		return ss.str();
 	}
 

@@ -6,7 +6,7 @@
 #    By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/11/08 14:54:30 by kostya            #+#    #+#              #
-#    Updated: 2022/02/20 18:19:16 by tlucanti         ###   ########.fr        #
+#    Updated: 2022/02/23 19:50:29 by tlucanti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,6 +23,8 @@ OBJS_DIR	=	obj
 INCLUDE_DIR	=	inc
 SCRS_DIR	=	src
 DEPS_DIR	=	dep
+# --------------------------------- submodules ---------------------------------
+WEBCORE		=	webcore
 # ------------------------------- project sorces -------------------------------
 SRCS		=	\
 				IRCParser			\
@@ -45,11 +47,21 @@ OBJS		=	$(addprefix ${OBJS_DIR}/,${SRCS:=.o})
 DEPS		=	$(addprefix ${DEPS_DIR}/,${SRCS:=.d})
 INCLUDE		=	-I ${INCLUDE_DIR}
 _DEPS_MV	=	$(addprefix ${OBJS_DIR}/,${SRCS:=.d})
+LIBINIT		=	ar rc
 
+W			=	\e[1;97m
+G			=	\e[1;92m
+Y			= 	\e[1;93m
+R			=	\e[1;91m
+C			=	\e[1;96m
+P			=	\e[1;95m
+S			=	\e[0m
+SPACE		=	                      
 
 # ------------------------------------------------------------------------------
 all:			${OBJS_DIR} ${DEPS_DIR}
-	@$(MAKE)	$(NAME) -j
+	@$(MAKE)	$(NAME)
+	@printf		"$(G)OK$(S)                                                  \n"
 
 # ------------------------------------------------------------------------------
 $(NAME):		${OBJS}
@@ -60,17 +72,24 @@ $(NAME):		${OBJS}
 
 # ------------------------------------------------------------------------------
 ${OBJS_DIR}/%.o: ${SCRS_DIR}/%.cpp 
-	@echo [${CC}] Building CXX object $<
+	@printf		"$(G)[${CC}]$(W)\t\tBuilding CXX object $(Y)$<$(S)$(SPACE)\r"
 	@${CXX}		${CXXFLAGS} ${CXXOPTIONS} -c -MMD -MT $@ -o $@ $< ${INCLUDE}
 	@mv			${@:.o=.d} ${DEPS_DIR}
 
 # ------------------------------------------------------------------------------
+install:
+	@printf
+	ln			-sf ${WEBCORE}/${INCLUDE}/*.hpp ${INCLUDE}
+
+# ------------------------------------------------------------------------------
 clean:
-	${RM}		${OBJS} ${DEPS}
+	@printf		"$(R)[RM]$(W)\t\t${OBJS} ${DEPS}$(S)$(SPACE)\n"
+	@${RM}		${OBJS} ${DEPS}
 
 # ------------------------------------------------------------------------------
 fclean:			clean
-	${RM}		${NAME}
+	@printf		"$(R)[RM]$(W)\t\t${NAME}\n"
+	@${RM}		${NAME}
 
 # ------------------------------------------------------------------------------
 re:				fclean all
@@ -105,10 +124,12 @@ compile:
 
 # ------------------------------------------------------------------------------
 ${OBJS_DIR}:
-	mkdir		-p ${OBJS_DIR}
+	@printf		"$(P)[MK]\t$(Y)${OBJS_DIR}$(S)$(SPACE)\n"
+	@mkdir		-p ${OBJS_DIR}
 
 # ------------------------------------------------------------------------------
 ${DEPS_DIR}:
+	@printf		"$(P)[MK]\t$(Y)${DEPS_DIR}$(S)$(SPACE)\n"
 	mkdir		-p ${DEPS_DIR}
 
 # ------------------------------------------------------------------------------

@@ -9,11 +9,11 @@
 - reformat tlucanti::IRCParser::parse and remove if/else
 - make change nickname nice message
 - write 001 instead 1 in IRC code response
-- server ping response
+- remove all #warnings
 
 ### NOW
 
-- file transfer
+- backward file transfer
 - write all commands in README.md
 - fix WHO command realname
 - add all commands from README.md
@@ -22,6 +22,8 @@
 
 ### DONE
 
+- server ping response
+- forward file transfer
 - make invalid port checker in argv
 - ping - pong
 - debug web
@@ -32,10 +34,12 @@
 
 ### COMMITS 
 
-6522
+6777
 
-|	+9187	|	-2665	|
+|	+9757	|	-2980	|
 |-----------|-----------|
+|	+135	|	-15		|
+|	+435	|	-300	|
 |	+740	|	-195	|
 |	+328	|	-88		|
 |	+1300	|	-407	|

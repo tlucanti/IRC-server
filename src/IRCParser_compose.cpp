@@ -136,14 +136,6 @@ tlucanti::IRCParser::compose_quit()
 	return "";
 }
 
-__WUR
-std::string
-tlucanti::IRCParser::compose_error() const
-{
-	#warning "implement compose_error"
-	ABORT("implement error", "");
-}
-
 // ---------------------------- Channel Operations -----------------------------
 __WUR
 std::string
@@ -467,8 +459,8 @@ __WUR
 std::string
 tlucanti::IRCParser::compose_time() const
 {
-	#warning "implement time";
-	ABORT("implement time", "");
+	user->assert_mode("reg+");
+	return IRC::RPL_TIME(*user);
 }
 
 __WUR
@@ -495,8 +487,9 @@ __WUR
 std::string
 tlucanti::IRCParser::compose_info() const
 {
-	#warning "implement compose_info";
-	ABORT("implement info", "");
+	user->send_message(IRC::RPL_INFO(*user));
+	user->send_message(IRC::RPL_ENDOFINFO(*user));
+	return "";
 }
 
 __WUR

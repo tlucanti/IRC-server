@@ -1,0 +1,3 @@
+[submodule "webcore"]
+	path = webcore
+	url = git@github.com:tlucanti/webcore.git

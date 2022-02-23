@@ -83,7 +83,6 @@ namespace tlucanti
 		__WUR std::string compose_pong() const;
 		__WUR std::string compose_oper() const;
 		__WUR std::string compose_quit();
-		__WUR std::string compose_error() const;
 
 		__WUR std::string compose_join();
 		__WUR std::string compose_part() const;

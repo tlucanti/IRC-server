@@ -5,31 +5,23 @@ set(CMAKE_CXX_STANDARD 23)
 
 add_executable(irc
 	inc/lexical_cast.hpp
-	inc/SocketException.hpp
 	inc/defs.h
 	inc/IRCException.hpp
-	inc/ServerException.hpp
-	inc/Server.hpp
 	inc/global.h
 	inc/Database.hpp
 	inc/ITarget.hpp
 	inc/User.hpp
-	inc/Socket.hpp
 	inc/Channel.hpp
 	inc/InviteNode.hpp
 	inc/IRCcodes.h
 	inc/Color.hpp
 	inc/IRCrpl.hpp
 	inc/IRCParser.hpp
-	inc/Mutex.hpp
-	inc/Thread.hpp
 	inc/IRCParserException.hpp
 	inc/parser_utils.hpp
 
 	src/IRCParser.cpp
-	src/Mutex.cpp
 	src/IRCParser_dcc_compose.cpp
-	src/Socket.cpp
 	src/Channel.cpp
 	src/IRCParser_compose.cpp
 	src/server_utils.cpp
@@ -40,7 +32,19 @@ add_executable(irc
 	src/User.cpp
 	src/IRCException.cpp
 	src/main.cpp
-	src/Server.cpp
+
+	webcore/src/Mutex.cpp
+	webcore/src/Socket.cpp
+	webcore/src/Server.cpp
+
+	webcore/inc/SocketException.hpp
+	webcore/inc/defs.h
+	webcore/inc/ServerException.hpp
+	webcore/inc/Server.hpp
+	webcore/inc/Socket.hpp
+	webcore/inc/Mutex.hpp
+	webcore/inc/Thread.hpp
+	webcore/inc/Exception.hpp
 )
 
 add_executable(test
