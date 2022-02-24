@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/15 17:34:03 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/20 21:34:41 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/24 11:46:55 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,7 +107,9 @@ void test_rpl()
 		NAMREPLY_tar));
 	RPL_test(RPL_ENDOFNAMES("TARGET", "CHANNEL"));
 	RPL_test(ERR_NOMOTD("TARGET", "FNAME"));
+	RPL_test(RPL_INFO("TARGET"));
 	RPL_test(RPL_MOTD("TARGET", "../test/test_motd.txt"));
+	RPL_test(RPL_ENDOFINFO("TARGET"));
 	RPL_test(RPL_MOTDSTART("TARGET"));
 	RPL_test(RPL_ENDOFMOTD("TARGET"));
 	RPL_test(RPL_YOUREOPER("TARGET", "MESSAGE"));

@@ -46,12 +46,13 @@ tlucanti::IRCParser::parse()
 	}
 	else if (command == "PONG")
 	{
-		check_format(line, "[:nick]", "cmd", ":pass");
-		message = line.at(1);
+		check_format(line, "[:nick]", "cmd", "[:pass]");
+		if (has_suffix)
+			message = line.at(1);
 	}
 	else if (command == "OPER")
 	{
-		check_format(line, "[:nick]", "cmd", "nick", "pass");
+		check_format(line, "[:nick]", "cmd", "str", "pass");
 		nickname = line.at(1);
 		password = line.at(2);
 	}

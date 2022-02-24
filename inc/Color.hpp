@@ -43,39 +43,23 @@ namespace tlucanti
 		color &operator =(const color &) __DELETE
 	};
 
-	const char *color::k  = "\033[1;90m";
-	const char *color::r  = "\033[1;91m";
-	const char *color::g  = "\033[1;92m";
-	const char *color::y  = "\033[1;93m";
-	const char *color::b  = "\033[1;94m";
-	const char *color::p  = "\033[1;95m";
-	const char *color::c  = "\033[1;96m";
-	const char *color::w  = "\033[1;97m";
-	const char *color::s  = "\033[0m";
-
-	const char *color::tlucanti   = (char *) "\033[19;1;96;21;6m";
+	const color cout;
+	extern const char *endl;
 }
 
-const tlucanti::color &operator <<(const tlucanti::color &out, const std::string &message)
+namespace tlucanti
 {
-	std::string colored = message;
-	colored = tlucanti::replace(colored, "[k]", tlucanti::color::k);
-	colored = tlucanti::replace(colored, "[r]", tlucanti::color::r);
-	colored = tlucanti::replace(colored, "[g]", tlucanti::color::g);
-	colored = tlucanti::replace(colored, "[y]", tlucanti::color::y);
-	colored = tlucanti::replace(colored, "[b]", tlucanti::color::b);
-	colored = tlucanti::replace(colored, "[p]", tlucanti::color::p);
-	colored = tlucanti::replace(colored, "[c]", tlucanti::color::c);
-	colored = tlucanti::replace(colored, "[w]", tlucanti::color::w);
-	colored = tlucanti::replace(colored, "[]", tlucanti::color::s);
-	std::cout << colored;
-	return out;
-}
+	void WARN(const std::string &parent, int error, const std::string &msg);
+	void WARN(const std::string &parent, const std::string &msg);
+	void ERROR(const std::string &parent, int error, const std::string &msg);
+	void ERROR(const std::string &parent, const std::string &msg);
+	void INFO(const std::string &parent, int error, const std::string &msg);
+	void INFO(const std::string &parent, const std::string &msg);
+//}
 
-const tlucanti::color &operator <<(const tlucanti::color &out, const std::exception &exc)
-{
-	std::string msg = exc.what();
-	return out << msg;
-}
+const tlucanti::color &operator <<(const tlucanti::color &out, const std::string &message);
+const tlucanti::color &operator <<(const tlucanti::color &out, const std::exception &exc);
+const tlucanti::color &operator <<(const tlucanti::color &out, const char *msg);
 
+}
 #endif  // COLOR_HPP

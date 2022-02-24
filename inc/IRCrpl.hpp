@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/23 17:06:43 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/24 20:33:17 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 # include "global.h"
 
 # ifndef __BOT
+
+std::string get_current_time();
 
 namespace tlucanti::IRC
 {
@@ -633,7 +635,12 @@ namespace tlucanti::IRC
 		ss << start << "modify it under the terms of the MIT License" <<
 			IRC::endl;
 		ss << start << IRC::endl;
-		ss << start << ""
+		ss << start << "" << IRC::endl;
+		ss << start << "Birth date: Wed Feb 2 2022" << IRC::endl;
+		ss << start << "On-line since " << tlucanti::server_begining << IRC::endl;
+		ss << start << "Source code can be found at: " << tlucanti::server_source_link <<
+			IRC::endl;
+		return ss.str();
 	}
 
 	template <typename target_T>
@@ -662,6 +669,20 @@ namespace tlucanti::IRC
 			ss << start << line << IRC::endl;
 		}
 		fin.close();
+		return ss.str();
+	}
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	RPL_ENDOFINFO(const target_T &target)
+	/*
+		:`SERVER` 374 `TARGET` :End of INFO list
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_ENDOFINFO <<
+			' ' << target << ":End of INFO list" << IRC::endl;
 		return ss.str();
 	}
 
@@ -719,7 +740,7 @@ namespace tlucanti::IRC
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_TIME <<
 			' ' << target << ' ' << time(nullptr) << " :" <<
-			tlucanti::get_current_time() << IRC::endl;
+			::get_current_time() << IRC::endl;
 		return ss.str();
 	}
 
@@ -826,7 +847,7 @@ namespace tlucanti::IRC
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_UNKNOWNCOMMAND <<
-			' ' << target << ' ' << command << " :Command is unknown" << IRC::endl;
+			' ' << target << ' ' << command << " :Command `" << command << "` is unknown" << IRC::endl;
 		return ss.str();
 	}
 
@@ -840,7 +861,28 @@ namespace tlucanti::IRC
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NONICKNAMEGIVEN <<
-			' ' << target << " :Expected target" << IRC::endl;
+			' ' << target << " :expected nickname" << IRC::endl;
+		return ss.str();
+	}
+
+	template <typename target_T>
+	__WUR inline
+	std::string
+	ERR_ERRONEUSNICKNAME(const target_T &target, bool too_long=false)
+	/*
+		:`SERVER` 432 `TARGET` :bad nickname
+	*/
+	{
+		std::stringstream ss;
+		ss << ':' << tlucanti::server_name << ' ' <<
+			IRCcodes::ERR_ERRONEUSNICKNAME << ' ' << target;
+		if (too_long)
+			ss << " :nickname too long (max len is " <<
+				tlucanti::user_max_nick_len << ')';
+		else
+			ss << " :nickname can "
+				"contain only digits, letters or some special symbols";
+		ss << IRC::endl;
 		return ss.str();
 	}
 
@@ -850,13 +892,13 @@ namespace tlucanti::IRC
 	ERR_NICKNAMEINUSE(const target_T &target,
 		const new_target_T &new_nick)
 	/*
-		:`SERVER` 433 `TARGET` `NEWNICK` :target `NEWNICK` is already in use.
+		:`SERVER` 433 `TARGET` `NEWNICK` :Nickname `NEWNICK` is already in use.
 	*/
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::ERR_NICKNAMEINUSE <<
-			' ' << target << ' ' << new_nick << " :target " << new_nick <<
-			" is already in use." << IRC::endl;
+			' ' << target << ' ' << new_nick << " :nickname `" << new_nick <<
+			"` is already in use" << IRC::endl;
 		return ss.str();
 	}
 

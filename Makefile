@@ -6,25 +6,25 @@
 #    By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/11/08 14:54:30 by kostya            #+#    #+#              #
-#    Updated: 2022/02/23 19:50:29 by tlucanti         ###   ########.fr        #
+#    Updated: 2022/02/23 20:22:20 by tlucanti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 # ------------------------------ compiler options ------------------------------
 NAME		=	ircserv
 CXX			=	clang++ -std=c++2a -g3
-CXXFLAGS	=
-# -Wall -Wextra -Werror
+CXXFLAGS	=	-Wall -Wextra -Werror
 CXXOPTIONS	=	-O2
 CC			=	CC
+# --------------------------------- submodules ---------------------------------
+WEBCORE_DIR	=	webcore
+WEBCORE		=	lib${WEBCORE_DIR}.a
 # ------------------------------- linker options -------------------------------
-LIBRARY		=	
+LIBRARY		=	${WEBCORE}
 OBJS_DIR	=	obj
 INCLUDE_DIR	=	inc
 SCRS_DIR	=	src
 DEPS_DIR	=	dep
-# --------------------------------- submodules ---------------------------------
-WEBCORE		=	webcore
 # ------------------------------- project sorces -------------------------------
 SRCS		=	\
 				IRCParser			\
@@ -78,8 +78,12 @@ ${OBJS_DIR}/%.o: ${SCRS_DIR}/%.cpp
 
 # ------------------------------------------------------------------------------
 install:
-	@printf
-	ln			-sf ${WEBCORE}/${INCLUDE}/*.hpp ${INCLUDE}
+	@printf		"$(C)[LN]$(W)\t\t${WEBCORE_DIR}/${INCLUDE_DIR}/*.hpp\n"
+	@cd			inc && \
+	ln			-sf ../${WEBCORE_DIR}/${INCLUDE_DIR}/*.hpp .
+	@printf		"$(C)[LN]$(W)\t\t${WEBCORE_DIR}/lib${WEBCORE}\n"
+	@ln			-sf ${WEBCORE_DIR}/${WEBCORE} ${WEBCORE}
+
 
 # ------------------------------------------------------------------------------
 clean:

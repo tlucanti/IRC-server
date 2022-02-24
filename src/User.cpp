@@ -77,10 +77,8 @@ tlucanti::User::check_ping(const std::string &ping) const
 	try {
 		p = tlucanti::lexical_cast<ull, 16>(ping);
 	} catch (tlucanti::bad_lexical_cast &) {
-		std::cout << "ERROR\n";
 		return false;
 	}
-	std::cout << p << " == " << ping_message << "\n";
 	return p == ping_message;
 }
 

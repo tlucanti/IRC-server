@@ -15,7 +15,7 @@
 const char *tlucanti::IRCParser::PRINTABLE = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+-./:;<=>?@[\]^_`{|}~)";
 const char *tlucanti::IRCParser::PRINTABLESPACE = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+-./:;<=>?@[\]^_`{|}~ )";
 const char *tlucanti::IRCParser::ALNUM = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const char *tlucanti::IRCParser::NICKNAME = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-[]\`^{}*)";
+const char *tlucanti::IRCParser::NICKNAME = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-+=^[](){})";
 
 namespace tlucanti {
 	extern Database database;
@@ -106,7 +106,8 @@ tlucanti::IRCParser::check_format_single(const std::string &arg, const std::stri
 }
 
 void
-tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &format)
+tlucanti::IRCParser::
+check_format__macro(arg_list_type &_line, arg_list_type &format)
 {
 	arg_list_type::iterator format_i = format.begin();
 	arg_list_type::iterator line_i = _line.begin();
@@ -118,15 +119,15 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			if (*format_i == "cmd")
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected command"));
 			else if (*format_i == "pass")
-				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted password"));
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected password"));
 			else if (*format_i == ":pass")
-				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted password"));
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected password"));
 			else if (*format_i == "nick")
 				throw IRCParserException(IRC::ERR_NONICKNAMEGIVEN(*user));
 			else if (*format_i == "str")
-				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted argument"));
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected argument"));
 			else if (*format_i == "chan")
-				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted channel"));
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected channel"));
 			else if (*format_i == ":msg")
 				throw IRCParserException(IRC::ERR_NOTEXTTOSEND(*user));
 			else if (*format_i == "chan_list")
@@ -150,8 +151,10 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			if (not contains_only(*line_i, IRCParser::PRINTABLE))
 				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message can contain only printable characters with no spaces"));
 		}
-		else if (*format_i == ":pass")
+		else if (*format_i == ":pass" or *format_i == "[:pass]")
 		{
+			if (format_i->at(0) == '[')
+				++has_suffix;
 			if (line_i->at(0) == ':')
 				line_i->erase(0, 1);
 			check_format_single(*line_i, "pass");
@@ -159,9 +162,9 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 		else if (*format_i == "nick")
 		{
 			if (line_i->at(0) == ':')
-				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "excepted nickname, not message suffix"));
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected nickname, not message suffix"));
 			if (not contains_only(*line_i, IRCParser::NICKNAME))
-				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "nickname can contain only digits, letters or special symbols -[]\\`^{}\n"));
+				throw IRCParserException(IRC::ERR_ERRONEUSNICKNAME(*user));
 		}
 		else if (*format_i == "str")
 		{
@@ -292,5 +295,5 @@ tlucanti::IRCParser::check_format__macro(arg_list_type &_line, arg_list_type &fo
 			ABORT("unknown specifier", *format_i);
 	}
 	if (line_i != _line.end())
-		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command ignored: " + *line_i));
+		throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "extra tokens at the end of command"));
 }

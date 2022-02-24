@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:02:03 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/16 22:19:43 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/23 21:42:44 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,14 @@
 
 namespace tlucanti
 {
-	extern sig_atomic_t server_run;
+	extern sig_atomic_t server_int;
 
 	extern const char *server_name;
 	extern const char *server_address;
 	extern const char *server_version;
-	extern const char *server_oper_login;
-	extern const char *server_oper_password;
+	extern const char *server_source_link;
+	extern std::string server_oper_login;
+	extern std::string server_oper_password;
 
 	extern std::string server_password;
 	extern std::string server_begining;

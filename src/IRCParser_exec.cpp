@@ -58,8 +58,6 @@ tlucanti::IRCParser::exec(const Socket &client)
 		return compose_oper();
 	else if (command == "QUIT")
 		return compose_quit();
-	else if (command == "ERROR")
-		return compose_error();
 // ---------------------------- Channel Operations -----------------------------
 	else if (command == "JOIN")
 		return compose_join();

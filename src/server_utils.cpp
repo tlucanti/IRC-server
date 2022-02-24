@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 13:32:57 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/19 17:28:34 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/23 22:59:32 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,12 @@
 #include "../inc/Server.hpp"
 #include "../inc/IRCParser.hpp"
 #include "../inc/Thread.hpp"
+#include "../inc/Color.hpp"
 
 namespace tlucanti
 {
 	extern Database database;
-	extern sig_atomic_t server_run;
+	extern sig_atomic_t server_int;
 	std::string make_response(const Socket &client, const std::string &request);
 	void main_thread(Server &server);
 	void *invite_thread(void *);
@@ -42,44 +43,66 @@ namespace tlucanti
 	void main_thread(Server &server)
 	{
 		std::map<Socket, std::string> cached;
-		while (!tlucanti::server_run)
+		while (not tlucanti::server_int)
 		{
-			Socket new_cli = server.accept();
-			if (new_cli != Socket::nil)
-			{
-				std::cout << "add new client " << new_cli.get_sock() << std::endl;
-				server.add_client(new_cli);
-				database.add_client(new_cli);
-			}
-			Socket client = server.poll();
-			if (client == Socket::nil)
-				continue;
-			std::string request = cached[client] + client.recv();
-			if (request.back() != '\n' and request.back() != '\r')
-			{
-				cached[client] = request;
-				continue ;
-			}
-			else
-				cached.erase(client);
-			std::vector<std::string> commands;
-			split(request, commands, '\n');
-			std::vector<std::string>::iterator it=commands.begin();
-			for (; it != commands.end(); ++it)
-			{
-				if (it->empty())
+			try {
+				Socket new_cli = server.accept();
+				if (new_cli != Socket::nil)
+				{
+					std::cout << "new client (" << new_cli.get_sock() <<
+						") connected: " << new_cli.get_address() << ':' <<
+						new_cli.get_port() << std::endl;
+					server.add_client(new_cli);
+					database.add_client(new_cli);
+				}
+				Socket client = server.poll();
+				if (client == Socket::nil)
+					continue;
+				std::string request;
+				try {
+					request = cached[client] + client.recv();
+				} catch (SocketException &exc) {
+#ifdef __DEBUG
+					tlucanti::cout << exc.what() << tlucanti::endl;
+#endif /* __DEBUG */
+					database.remove_client(client);
+				}
+				if (request.back() != '\n' and request.back() != '\r')
+				{
+					cached[client] = request;
 					continue ;
+				}
+				else
+					cached.erase(client);
+				std::vector<std::string> commands;
+				split(request, commands, '\n');
+				std::vector<std::string>::iterator it=commands.begin();
+				for (; it != commands.end(); ++it)
+				{
+					if (it->empty())
+						continue ;
 
-				std::string response = make_response(client, *it);
-				if (not response.empty())
-					client.send(response);
+					std::string response = make_response(client, *it);
+					if (response.empty())
+						ABORT("empty response", "");
+					if (response != "OK")
+						client.send(response);
+#ifdef __DEBUG
+					if (response == "OK")
+						client.send(response + IRC::endl);
+#endif /* __DEBUG */
+				}
+			}
+			catch (IRCException &exc)
+			{
+				tlucanti::cout << exc.what() << "\n";
 			}
 		}
 	}
 
 	void *invite_thread(void *)
 	{
-		while (!tlucanti::server_run)
+		while (not tlucanti::server_int)
 		{
 			Database::invite_table_type::iterator it = database.invite_table.begin();
 			for (; it != database.invite_table.end(); ++it)
@@ -97,7 +120,7 @@ namespace tlucanti
 	{
 		typedef unsigned long long ull;
 		int wait = 0;
-		while (!tlucanti::server_run)
+		while (not tlucanti::server_int)
 		{
 			++wait;
 			sleep(1);
@@ -109,7 +132,6 @@ namespace tlucanti
 			for (; it != database.sock_access.end(); ++it)
 			{
 				User *user = it->second;
-				std::cout << *user << ' ' << user->ping_waiting << std::endl;
 				if (not user->ping_waiting and user->has_mode("reg+") and time(nullptr) > user->last_ping + 180)
 					user->do_ping();
 				else if (user->ping_waiting and time(nullptr) > user->last_ping + tlucanti::ping_expiration)

@@ -20,16 +20,16 @@ const int tlucanti::Socket::READ_SIZE = 64;
 const int tlucanti::Server::WAIT_TIME = 500;
 namespace tlucanti
 {
-	const tlucanti::color cout;
 	tlucanti::Database database;
-	sig_atomic_t server_run;
+	sig_atomic_t server_int;
 
 	const char *server_name = "__TLUCANTI__";
 	const char *server_address = "0.0.0.0";
 	const char *server_version = "1.0";
-	const char *server_oper_login = "tlucanti";
-	const char *server_oper_password = "oper";
+	const char *server_source_link = "https://github.com/tlucanti/irc";
 
+	std::string server_oper_login;
+	std::string server_oper_password;
 	std::string server_password;
 	std::string server_begining;
 	unsigned short	server_port;
@@ -84,7 +84,7 @@ get_current_time()
 
 void check_args(int argc, const char *const *argv)
 {
-	if (argc == 2 and std::string(argv[2]) == "--help")
+	if (argc == 2 and std::string(argv[1]) == "--help")
 	{
 		tlucanti::cout << "[b][INFO] [p]c++[w] irc webserver[]\n";
 		tlucanti::cout << "[p] usage:[c] ./ircserv [y]PORT PASSWORD[]\n";
@@ -106,24 +106,55 @@ void check_args(int argc, const char *const *argv)
 		{
 			throw tlucanti::IRCException("lexical_cast", exc.what());
 		}
-		tlucanti::server_run = 0;
+		tlucanti::server_int = 0;
+	}
+	{
+		const char *_oper_login = getenv("OPER_LOGIN");
+		const char *_oper_pass = getenv("OPER_PASS");
+		if (_oper_login == nullptr)
+		{
+			tlucanti::WARN("server", "operator login not found in environment variable `OPER_LOGIN`");
+			_oper_login = "";
+		}
+		if (_oper_pass == nullptr)
+		{
+			tlucanti::WARN("server", "operator password not found in environment variable `OPER_PASS`");
+			_oper_pass = "";
+		}
+		tlucanti::server_oper_login = _oper_login;
+		tlucanti::server_oper_password = _oper_pass;
 	}
 }
 
 int main(int argc, char *const *argv)
 {
-//	try
+#ifndef __DEBUG
+	try
 	{
+#endif /* __DEBUG */
 		check_args(argc, argv);
 		tlucanti::Server server(tlucanti::server_address, tlucanti::server_port);
 		tlucanti::cout << "[w]server started at address: [" << tlucanti::server_address << "/" << argv[1] << "][]\n";
 		tlucanti::server_start(server);
-		if (tlucanti::server_run == 'r')
+		if (tlucanti::server_int == 'r')
 			execv(argv[0], argv);
-		else if (tlucanti::server_run == 'q')
+		else if (tlucanti::server_int == 'q')
 			return 0;
+#ifndef __DEBUG
 	}
-//	catch (std::exception &exc) {
-//		tlucanti::cout << exc;
-//	}
+	catch (std::exception &exc) {
+		tlucanti::cout << "[r][FATAL]: [r]" << exc << tlucanti::endl;
+		tlucanti::cout << "[r][*** FATAL ERROR ***]: server shutting down[]\n";
+		try {
+			tlucanti::database.send_to_all(tlucanti::IRC::compose_message(nullptr, "NOTICE", '*',
+				"*** SERVER FATAL ERROR *** SERVER SHUTTING DOWN"));
+		} catch (std::exception &)
+		{
+			std::cout << tlucanti::color::r << "[*** FATAL ERROR ***]: cannot send collapsing message to users";
+			std::cout << tlucanti::color::s << "\n";
+		}
+		tlucanti::database.collapse();
+		return 1;
+	}
+#endif /* __DEBUG */
 }

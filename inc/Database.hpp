@@ -40,7 +40,9 @@ namespace tlucanti
 		Channel *add_channel(const std::string &name);
 		void add_client(const Socket &sock);
 		void remove_client(User &user);
+		void remove_client(Socket &socket);
 		__WUR bool make_edge(const std::string &nickname, const Socket &sock);
+		void remove_edge(const std::string &nickname);
 		void make_invite(const User &user, const Channel &channel);
 		void remove_invite(const User &user, const Channel &channel);
 		void remove_invite(const InviteNode &inv);

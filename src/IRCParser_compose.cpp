@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 09:35:33 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/16 19:53:38 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/23 20:25:53 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ __WUR
 std::string
 tlucanti::IRCParser::compose_cap() const
 {
-	return "";
+	return "OK";
 }
 
 __WUR
@@ -31,9 +31,9 @@ tlucanti::IRCParser::compose_pass() const
 {
 	user->assert_mode("pass-");
 	if (password != tlucanti::server_password)
-		return IRC::compose_message(nullptr, "NOTICE", "*", "password incorrect");
+		return IRC::ERR_PASSWDMISMATCH('*');
 	user->make_mode("pass+");
-	return "";
+	return "OK";
 }
 
 __WUR
@@ -41,6 +41,10 @@ std::string
 tlucanti::IRCParser::compose_nick() const
 {
 	user->assert_mode("pass+");
+	if (nickname.size() > tlucanti::user_max_nick_len)
+		return IRC::ERR_ERRONEUSNICKNAME(*user, true);
+	if (user->has_mode("nick+") and user->get_name() == nickname)
+		return "OK";
 	if (database.make_edge(nickname, user->get_sock()))
 	{
 		if (user->has_mode("nick+"))
@@ -49,12 +53,14 @@ tlucanti::IRCParser::compose_nick() const
 	}
 	if (user->has_mode("nick+"))
 	{
-		std::string old = user->get_name();
+		database.remove_edge(user->get_name());
+		std::string old = user->compose();
 		user->make_nickname(nickname);
-		return IRC::compose_message(nullptr, "NOTICE", *user, old + " is now known as " + nickname);
+		user->send_to_channels(IRC::compose_message(old, "NICK", "", nickname));
 	}
-	user->make_nickname(nickname);
-	return "";
+	else
+		user->make_nickname(nickname);
+	return "OK";
 }
 
 __WUR
@@ -73,6 +79,9 @@ std::string
 tlucanti::IRCParser::
 compose_ping() const
 {
+	user->assert_mode("reg+");
+	if (not has_preffix)
+		return "OK";
 	return IRC::compose_message(nullptr, "PONG", tlucanti::server_name, message);
 }
 
@@ -103,7 +112,7 @@ tlucanti::IRCParser::compose_pong() const
 		user->send_message(IRC::compose_message(*user, "MODE", *user, user->get_modes()));
 		user->complete_user();
 	}
-	return "";
+	return "OK";
 }
 
 __WUR
@@ -186,7 +195,6 @@ tlucanti::IRCParser::compose_join()
 		chan->add_user(*user);
 		user->add_channel(*chan);
 
-		std::cout << chan->get_users().size() << " users in channel " << chan->get_name() << "\n";
 		chan->send_message(IRC::compose_message(user->compose(), "JOIN", "", chan->get_name(), false));
 		channel = chan->get_name();
 		user->send_message(compose_topic());
@@ -688,54 +696,65 @@ tlucanti::IRCParser::compose_mode_single()
 // ----------------------------- Sending Messages ------------------------------
 __WUR
 std::string
-tlucanti::IRCParser::compose_privmsg() const
+tlucanti::IRCParser::compose_msg(const std::string &type)
 {
 	user->assert_mode("reg+");
 	arg_list_type::const_iterator it = user_list.begin();
 	for (; it != user_list.end(); ++it)
 	{
-		User *cli = database[*it];
-		if (cli == nullptr)
-			user->send_message(IRC::ERR_NOSUCHNICK(*user, *it, "user with nickname"));
-		else
-			cli->send_message(IRC::RPL_AWAY(*user, *cli, message));
+		target = *it;
+		compose_msg_usr_single();
 	}
 	it = chan_list.begin();
 	for (; it != chan_list.end(); ++it)
 	{
-		Channel *chan = database.get_channel(*it);
-		if (chan == nullptr) // channel not exist
-		{
-			user->send_message(IRC::ERR_NOSUCHCHANNEL(*user, *it, "channel with name"));
-			continue ;
-		}
-		if (chan->is_banned(*user)) // user banned from channel
-		{
-			user->send_message(IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are banned from channel"));
-			continue ;
-		}
-		if (chan->has_mode("n+") and (*chan)[*user] == nullptr) // no external messages
-		{
-			user->send_message(IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are have to be in this channel to send message"));
-			continue ;
-		}
-		if (chan->has_mode("m+") and not chan->is_voice(*user)) // moderated channel
-		{
-			user->send_message(IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are have no permission to speak on this channel"));
-			continue ;
-		}
-		// ok, sending message
-		chan->send_message(IRC::RPL_AWAY(*user, *chan, message), *user);
+		channel = *it;
+		std::string response = compose_msg_chan_single();
+		if (not response.empty())
+			user->send_message(response);
 	}
 	return "";
 }
 
 __WUR
 std::string
-tlucanti::IRCParser::compose_notice() const
+tlucanti::IRCParser::compose_privmsg()
 {
-	#warning "implement compose_notice"
-	ABORT("implement notice", "");
+	return compose_msg("PRIVMSG");
+}
+__WUR
+std::string
+tlucanti::IRCParser::compose_notice()
+{
+	return compose_msg("NOTICE");
+}
+
+__WUR
+std::string
+tlucanti::IRCParser::compose_msg_chan_single() const
+{
+	Channel *chan = database.get_channel(channel);
+	if (chan == nullptr) // channel not exist
+		return IRC::ERR_NOSUCHCHANNEL(*user, channel, "channel with name");
+	if (chan->is_banned(*user)) // user banned from channel
+		return IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are banned from channel");
+	if (chan->has_mode("n+") and (*chan)[*user] == nullptr) // no external messages
+		return IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are have to be in this channel to send message");
+	if (chan->has_mode("m+") and not chan->is_voice(*user)) // moderated channel
+		return IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are have no permission to speak on this channel");
+	// ok, sending message
+	chan->send_message(IRC::RPL_AWAY(*user, *chan, message), *user);
+	return "";
+}
+
+void
+tlucanti::IRCParser::compose_msg_usr_single() const
+{
+	User *cli = database[target];
+	if (cli == nullptr)
+		user->send_message(IRC::ERR_NOSUCHNICK(*user, target, "user with nickname"));
+	else
+		cli->send_message(IRC::RPL_AWAY(*user, *cli, message));
 }
 
 // ---------------------------- User-Based Queries -----------------------------
@@ -835,7 +854,7 @@ tlucanti::IRCParser::compose_restart() const
 		return IRC::ERR_NOPRIVILEGES(*user);
 	database.send_to_all(IRC::compose_message(nullptr, "NOTICE", '*',
 		"WARNING! SERVER RESTARTING"));
-	server_run = 'r';
+	server_int = 'r';
 	database.collapse();
 	throw IRCException("server", "called restart command");
 }
@@ -849,7 +868,7 @@ tlucanti::IRCParser::compose_squit() const
 		return IRC::ERR_NOPRIVILEGES(*user);
 	database.send_to_all(IRC::compose_message(nullptr, "NOTICE", '*',
 		"WARNING! SERVER SHUTTING DOWN"));
-	server_run = 'q';
+	server_int = 'q';
 	database.collapse();
 	throw IRCException("server", "called squit command");
 }

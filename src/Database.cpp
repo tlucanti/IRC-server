@@ -62,6 +62,19 @@ tlucanti::Database::remove_client(User &user)
 	delete (&user);
 }
 
+void
+tlucanti::Database::remove_client(Socket &socket)
+{
+	User *usr = (*this)[socket];
+	if (usr != nullptr)
+		remove_client(*usr);
+	else
+	{
+		sock_access.erase(socket.get_sock());
+		socket.close();
+	}
+}
+
 __WUR bool
 tlucanti::Database::make_edge(const std::string &nickname, const Socket &sock)
 {
@@ -69,6 +82,12 @@ tlucanti::Database::make_edge(const std::string &nickname, const Socket &sock)
 		return true;
 	str_access.insert({nickname, sock_access[sock.get_sock()]});
 	return false;
+}
+
+void
+tlucanti::Database::remove_edge(const std::string &nickname)
+{
+	str_access.erase(nickname);
 }
 
 void
