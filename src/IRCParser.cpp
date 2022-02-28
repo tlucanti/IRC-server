@@ -138,6 +138,8 @@ check_format__macro(arg_list_type &_line, arg_list_type &format)
 				throw IRCParserException(IRC::ERR_NORECIPIENT(*user, "expected target list"));
 			else if (*format_i == "target")
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected target"));
+			else if (*format_i == "any")
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected argument"));
 			else if (format_i->at(0) != '[')
 				ABORT("invalid format specifier", *format_i);
 			else
@@ -171,16 +173,23 @@ check_format__macro(arg_list_type &_line, arg_list_type &format)
 			if (line_i->at(0) == ':')
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected argument, not message suffix"));
 			if (not contains_only(*line_i, IRCParser::ALNUM))
-				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "string argumnet can contain only digin and letters"));
+				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "string argument may contain only digit and letters"));
+		}
+		else if (*(format_i) == "any")
+		{
+			if (line_i->at(0) == ':')
+				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected argument, not message suffix"));
+			if (not contains_only(*line_i, IRCParser::PRINTABLE))
+				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "argument may contain only printable characters"));
 		}
 		else if (*format_i == "chan")
 		{
 			if (line_i->at(0) == ':')
 				throw IRCParserException(IRC::ERR_NEEDMOREPARAMS(*user, command, "expected channel name, not message suffix"));
 			if (line_i->at(0) != '#' and line_i->at(0) != '&')
-				throw IRCParserException(IRC::ERR_NOSUCHCHANNEL(*user, channel, "channel name should start with # or &"));
+				throw IRCParserException(IRC::ERR_NOSUCHCHANNEL(*user, *line_i, "channel name should start with # or &"));
 			if (not contains_only(*line_i, IRCParser::PRINTABLE))
-				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "channel name can contain only printable characters with no spaces"));
+				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "channel name may contain only printable characters with no spaces"));
 		}
 		else if (*format_i == ":msg")
 		{
@@ -191,7 +200,7 @@ check_format__macro(arg_list_type &_line, arg_list_type &format)
 				return ;
 			}
 			if (not contains_only(*line_i, IRCParser::PRINTABLESPACE))
-				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message can contain only printable characters"));
+				throw IRCParserException(IRC::compose_message(nullptr, "NOTICE", *user, "message may contain only printable characters"));
 			if (line_i->at(0) == ':')
 				line_i->erase(0, 1);
 		}
@@ -273,23 +282,25 @@ check_format__macro(arg_list_type &_line, arg_list_type &format)
 		}
 		else if (*format_i == "[mode_list]")
 		{
+			++has_suffix;
 			while (line_i != _line.end())
 				modes_list.push_back(*line_i++);
 			--line_i;
 		}
 		else if (*format_i == "[:msg]")
 		{
-			has_suffix = true;
-			arg_list_type check;
-			check.push_back(*line_i);
-			check_format(check, ":msg");
+			++has_suffix;
+			check_format_single(*line_i, ":msg");
 		}
 		else if (*format_i == "[str]")
 		{
 			++has_suffix;
-			arg_list_type check;
-			check.push_back(*line_i);
-			check_format(check, "str");
+			check_format_single(*line_i, "str");
+		}
+		else if (*format_i == "[any]")
+		{
+			++has_suffix;
+			check_format_single(*line_i, "any");
 		}
 		else if ((*format_i).at(0) != '[')
 			ABORT("unknown specifier", *format_i);

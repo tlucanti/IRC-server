@@ -103,9 +103,9 @@ namespace tlucanti
 		__WUR std::string compose_mode();
 		__WUR std::string compose_mode_single();
 
-		__WUR std::string compose_msg(const std::string &type);
-		void compose_msg_usr_single() const;
-		__WUR std::string compose_msg_chan_single() const;
+		__WUR std::string compose_msg(const char *type);
+		void compose_msg_usr_single(const char *type) const;
+		__WUR std::string compose_msg_chan_single(const char *type) const;
 		__WUR std::string compose_privmsg();
 		__WUR std::string compose_notice();
 

@@ -35,7 +35,7 @@ tlucanti::IRCParser::parse()
 	}
 	else if (command == "USER")
 	{
-		check_format(line, "[:nick]", "cmd", "nick", "nick", "nick", ":msg");
+		check_format(line, "[:nick]", "cmd", "nick", "any", "any", ":msg");
 		nickname = line.at(1);
 		realname = line.at(4);
 	}
@@ -61,6 +61,8 @@ tlucanti::IRCParser::parse()
 		check_format(line, "cmd", "[:msg]");
 		if (has_suffix)
 			message = line.at(1);
+		else
+			message = "Quit from server";
 	}
 	else if (command == "ERROR")
 	{
@@ -75,6 +77,8 @@ tlucanti::IRCParser::parse()
 		check_format(line, "[:nick]", "cmd", "chan_list", "[:msg]");
 		if (has_suffix)
 			message = line.at(2);
+		else
+			message = "Quit from channel";
 	}
 	else if (command == "TOPIC")
 	{
@@ -82,6 +86,8 @@ tlucanti::IRCParser::parse()
 		channel = line.at(1);
 		if (has_suffix)
 			message = line.at(2);
+		else
+			message = "";
 	}
 	else if (command == "NAMES")
 		check_format(line, "[:nick]", "cmd", "[chan_list]");
@@ -100,6 +106,8 @@ tlucanti::IRCParser::parse()
 		nickname = line.at(2);
 		if (has_suffix)
 			message = line.at(3);
+		else
+			message = "Kicked out from server";
 	}
 // ------------------------ Server Queries and Commands ------------------------
 	else if (command == "MOTD")
@@ -112,14 +120,17 @@ tlucanti::IRCParser::parse()
 		check_format(line, "[:nick]", "cmd");
 	else if (command == "HELP")
 	{
-		check_format(line, "[:nick]", "cmd", "str");
-		message = line.at(1);
+		check_format(line, "[:nick]", "cmd", "[str]");
+		if (has_suffix)
+			message = line.at(1);
+		else
+			message = "";
 	}
 	else if (command == "INFO")
 		check_format(line, "[:nick]", "cmd");
 	else if (command == "MODE")
 	{
-		check_format(line, "[:nick]", "cmd", "target", "[str]", "[mode_list]");
+		check_format(line, "[:nick]", "cmd", "target", "[any]", "[mode_list]");
 		target = line.at(1);
 		if (has_suffix >= 1)
 			mode = line.at(2);

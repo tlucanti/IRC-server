@@ -87,13 +87,17 @@ namespace tlucanti
 						ABORT("empty response", "");
 					if (response != "OK")
 						client.send(response);
-#ifdef __DEBUG
-					if (response == "OK")
-						client.send(response + IRC::endl);
-#endif /* __DEBUG */
+//#ifdef __DEBUG
+//					if (response == "OK")
+//						client.send(response + IRC::endl);
+//#endif /* __DEBUG */
 				}
 			}
 			catch (IRCException &exc)
+			{
+				tlucanti::cout << exc.what() << "\n";
+			}
+			catch (Exception &exc)
 			{
 				tlucanti::cout << exc.what() << "\n";
 			}

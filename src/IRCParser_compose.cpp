@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "../inc/IRCParser.hpp"
-#include "../inc/lexical_cast.hpp"
 
 namespace tlucanti {
 	extern Database database;
@@ -71,7 +70,7 @@ tlucanti::IRCParser::compose_user() const
 	user->assert_mode("reg-");
 	user->make_user(nickname, realname);
 	user->do_ping();
-	return "";
+	return "OK";
 }
 
 __WUR
@@ -109,7 +108,7 @@ tlucanti::IRCParser::compose_pong() const
 		user->send_message(IRC::RPL_LOCALUSERS(*user, database.get_user_cnt(), database.max_users));
 		user->send_message(IRC::RPL_GLOBALUSERS(*user, database.get_user_cnt(), database.max_users));
 		user->send_message(compose_motd());
-		user->send_message(IRC::compose_message(*user, "MODE", *user, user->get_modes()));
+		user->send_message(IRC::compose_message(user->compose(), "MODE", *user, user->get_modes()));
 		user->complete_user();
 	}
 	return "OK";
@@ -136,7 +135,6 @@ __WUR
 std::string
 tlucanti::IRCParser::compose_quit()
 {
-	user->assert_mode("reg+");
 	if (message.empty())
 		message = "Client Quit";
 	user->send_to_channels(IRC::compose_message(user->compose(), "QUIT", "", message));
@@ -161,10 +159,12 @@ tlucanti::IRCParser::compose_join()
 
 	for (; chan_i != chan_list.end(); ++chan_i, ++pass_i)
 	{
+		Channel *chan = database.get_channel(*chan_i);
+
+		if (chan != nullptr and (*chan)[*user] != nullptr) // already in channel
+			return "OK";
 		if (user->has_mode("full+"))
 			return IRC::ERR_TOOMANYCHANNELS(*user, channel);
-
-		Channel *chan = database.get_channel(*chan_i);
 		if (chan == nullptr) // create new channel
 		{
 			chan = database.add_channel(*chan_i);
@@ -204,7 +204,7 @@ tlucanti::IRCParser::compose_join()
 		user->send_message(IRC::RPL_NAMREPLY(*user, '=', *chan, chan->get_users(), *chan));
 		user->send_message(IRC::RPL_ENDOFNAMES(*user, *chan));
 	}
-	return "";
+	return "OK";
 }
 
 __WUR
@@ -231,7 +231,7 @@ tlucanti::IRCParser::compose_part() const
 			chan->remove_oper(*user);
 		}
 	}
-	return "";
+	return "OK";
 }
 
 __WUR
@@ -423,7 +423,7 @@ tlucanti::IRCParser::compose_kick()
 		chan->remove_oper(*tar);
 		if (message.empty())
 			message = "Your behavior is not conducive to the desired environment.";
-		tar->send_message(IRC::compose_message(*user, "KICK", chan->get_name() + ' ' + tar->get_name(), message));
+		tar->send_message(IRC::compose_message(user->compose(), "KICK", chan->get_name() + ' ' + tar->get_name(), message));
 	}
 	return "";
 }
@@ -481,7 +481,7 @@ tlucanti::IRCParser::compose_help()
 	const char *fname = "../README.md";
 	{
 		struct stat buffer {};
-		if (stat(fname, &buffer) == 0)
+		if (stat(fname, &buffer))
 			return IRC::ERR_HELPNOTFOUND(recipient, "*");
 	}
 	std::transform(message.begin(), message.end(), message.begin(), toupper);
@@ -529,7 +529,7 @@ tlucanti::IRCParser::compose_mode()
 		}
 		message = "";
 		has_suffix = 1;
-		if (mode == "+l" or mode == "+k" or mode.at(1) == 'v' or mode.at(1) == 'o')
+		if (mode == "+l" or mode == "+k" or mode.at(1) == 'v' or mode.at(1) == 'o' or mode.at(1) == 'b')
 		{
 			if (arg_i != modes_list.end())
 			{
@@ -615,7 +615,7 @@ tlucanti::IRCParser::compose_mode_single()
 		else if (mode == "l+")
 		{
 			if (has_suffix == 1)
-				return IRC::ERR_NEEDMOREPARAMS(*user, "MODE", "expected channel password");
+				return IRC::ERR_NEEDMOREPARAMS(*user, "MODE", "expected channel limit");
 			unsigned int n;
 			try {
 				n = lexical_cast<int>(message);
@@ -696,20 +696,20 @@ tlucanti::IRCParser::compose_mode_single()
 // ----------------------------- Sending Messages ------------------------------
 __WUR
 std::string
-tlucanti::IRCParser::compose_msg(const std::string &type)
+tlucanti::IRCParser::compose_msg(const char *type)
 {
 	user->assert_mode("reg+");
 	arg_list_type::const_iterator it = user_list.begin();
 	for (; it != user_list.end(); ++it)
 	{
 		target = *it;
-		compose_msg_usr_single();
+		compose_msg_usr_single(type);
 	}
 	it = chan_list.begin();
 	for (; it != chan_list.end(); ++it)
 	{
 		channel = *it;
-		std::string response = compose_msg_chan_single();
+		std::string response = compose_msg_chan_single(type);
 		if (not response.empty())
 			user->send_message(response);
 	}
@@ -731,7 +731,7 @@ tlucanti::IRCParser::compose_notice()
 
 __WUR
 std::string
-tlucanti::IRCParser::compose_msg_chan_single() const
+tlucanti::IRCParser::compose_msg_chan_single(const char *type) const
 {
 	Channel *chan = database.get_channel(channel);
 	if (chan == nullptr) // channel not exist
@@ -743,18 +743,18 @@ tlucanti::IRCParser::compose_msg_chan_single() const
 	if (chan->has_mode("m+") and not chan->is_voice(*user)) // moderated channel
 		return IRC::ERR_CANNOTSENDTOCHAN(*user, *chan, "you are have no permission to speak on this channel");
 	// ok, sending message
-	chan->send_message(IRC::RPL_AWAY(*user, *chan, message), *user);
+	chan->send_message(IRC::RPL_AWAY(*user, *chan, type, message), *user);
 	return "";
 }
 
 void
-tlucanti::IRCParser::compose_msg_usr_single() const
+tlucanti::IRCParser::compose_msg_usr_single(const char *type) const
 {
 	User *cli = database[target];
 	if (cli == nullptr)
 		user->send_message(IRC::ERR_NOSUCHNICK(*user, target, "user with nickname"));
 	else
-		cli->send_message(IRC::RPL_AWAY(*user, *cli, message));
+		cli->send_message(IRC::RPL_AWAY(*user, *cli, type, message));
 }
 
 // ---------------------------- User-Based Queries -----------------------------
@@ -832,14 +832,14 @@ tlucanti::IRCParser::compose_kill() const
 		return IRC::ERR_NOPRIVILEGES(*user);
 	if (tar == nullptr)
 		return IRC::ERR_NOSUCHNICK(*user, nickname, "user with nickname");
-	arg_list_type::const_iterator it = user_list.begin();
+//	arg_list_type::const_iterator it = user_list.begin();
 	std::string _response;
 	{
 		std::stringstream ss;
 		ss << "Killed by " << user->get_name() << " (" << message << ')';
 		_response = ss.str();
 	}
-	tar->send_to_channels(IRC::compose_message(*user, "QUIT", *tar, _response));
+	tar->send_to_channels(IRC::compose_message(user->compose(), "QUIT", *tar, _response));
 	tar->send_message(IRC::ERROR(_response));
 	database.remove_client(*tar);
 	return "";

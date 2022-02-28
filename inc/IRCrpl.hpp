@@ -319,13 +319,13 @@ namespace tlucanti::IRC
 	__WUR inline
 	std::string
 	RPL_AWAY(const target_T &target, const to_T &recepient,
-		const std::string &message)
+		const char *type, const std::string &message)
 	/*
 		(301) :`NICK(full)` PRIVMSG `RECEPIENT` :`MESSAGE`
 	*/
 	{
 		std::stringstream ss;
-		ss << ':' << target.compose() << " PRIVMSG " <<
+		ss << ':' << target.compose() << ' ' << type << ' ' <<
 			recepient << " :" << message << IRC::endl;
 		return ss.str();
 	}

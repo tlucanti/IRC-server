@@ -40,6 +40,7 @@ namespace tlucanti
 	protected:
 		std::string _message;
 		std::string _parent;
+		std::string total_errors() const;
 	};
 }
 

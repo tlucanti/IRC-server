@@ -125,7 +125,7 @@ tlucanti::Database::has_invite(const User &user, const Channel &channel)
 {
 	invite_mutex.lock();
 	InviteNode invitation = InviteNode(&user, &channel, 0);
-	bool ret = invite_table.find(invitation) == invite_table.end();
+	bool ret = invite_table.find(invitation) != invite_table.end();
 	invite_mutex.unlock();
 	return ret;
 }
