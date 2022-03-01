@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 project(irc)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_FLAGS -D__DEBUG)
+set(CMAKE_CXX_STANDARD 98)
+set(CMAKE_CXX_FLAGS "-D__DEBUG -Wall -Wextra -Werror -D__CMAKE")
 
 include_directories(inc)
 link_directories(.)
@@ -11,7 +11,6 @@ add_executable(irc
 	inc/lexical_cast.hpp
 	inc/SocketException.hpp
 	inc/defs.h
-	inc/IRCException.hpp
 	inc/ServerException.hpp
 	inc/Server.hpp
 	inc/global.h
@@ -33,6 +32,7 @@ add_executable(irc
 
 	src/IRCParser.cpp
 	src/IRCParser_dcc_compose.cpp
+	src/Exception.cpp
 	src/Channel.cpp
 	src/IRCParser_compose.cpp
 	src/server_utils.cpp
@@ -42,7 +42,6 @@ add_executable(irc
 	src/Database.cpp
 	src/IRCParser_parse.cpp
 	src/User.cpp
-	src/IRCException.cpp
 	src/main.cpp
 
 	webcore/src/Mutex.cpp
@@ -51,12 +50,12 @@ add_executable(irc
 
 	webcore/inc/SocketException.hpp
 	webcore/inc/defs.h
+	webcore/inc/Exception.hpp.orig
 	webcore/inc/ServerException.hpp
 	webcore/inc/Server.hpp
 	webcore/inc/Socket.hpp
 	webcore/inc/Mutex.hpp
 	webcore/inc/Thread.hpp
-	webcore/inc/Exception.hpp
 )
 
 target_link_libraries(irc

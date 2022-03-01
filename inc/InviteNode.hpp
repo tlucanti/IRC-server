@@ -21,13 +21,13 @@ namespace tlucanti
 {
 	struct InviteNode
 	{
-		InviteNode(const User *user, const Channel *channel, time_t expire)
+		InviteNode(const std::string &user, const std::string &channel, time_t expire)
 				: user(user), channel(channel), expire(expire) {}
 		InviteNode(const InviteNode &cpy)
 				: user(cpy.user), channel(cpy.channel), expire(cpy.expire) {}
 		~InviteNode() __DEFAULT
-		const User *user;
-		const Channel *channel;
+		const std::string &user;
+		const std::string &channel;
 		time_t expire;
 
 		__WUR inline bool operator ==(const InviteNode &cmp) const

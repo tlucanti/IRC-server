@@ -14,7 +14,7 @@
 
 __WUR
 std::string
-tlucanti::IRCParser::compose_dcc(const std::string &message)
+tlucanti::IRCParser::compose_dcc(__UNUSED const std::string &message)
 {
 	return "";
 }

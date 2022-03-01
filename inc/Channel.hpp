@@ -20,7 +20,7 @@
 # include "ITarget.hpp"
 
 # include "defs.h"
-# include "IRCException.hpp"
+# include "Exception.hpp"
 # include "IRCParserException.hpp"
 # include "global.h"
 

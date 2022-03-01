@@ -12,8 +12,8 @@
 
 typedef unsigned short irc_code_t;
 
-namespace tlucanti::IRCcodes
-{
+namespace tlucanti {
+namespace IRCcodes {
 	irc_code_t RPL_WELCOME			= 001;
 	irc_code_t RPL_YOURHOST			= 002;
 	irc_code_t RPL_CREATED			= 003;
@@ -176,4 +176,5 @@ namespace tlucanti::IRCcodes
 	irc_code_t ERR_SASLABORTED		= 906;
 	irc_code_t ERR_SASLALREADY		= 907;
 	irc_code_t RPL_SASLMECHS		= 908;
-}
+} /* IRCcodes */
+} /* tlucanti */

@@ -6,15 +6,15 @@
 #    By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/11/08 14:54:30 by kostya            #+#    #+#              #
-#    Updated: 2022/02/23 20:22:20 by tlucanti         ###   ########.fr        #
+#    Updated: 2022/03/01 18:02:06 by tlucanti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 # ------------------------------ compiler options ------------------------------
 NAME		=	ircserv
-CXX			=	clang++ -std=c++2a -g3
-CXXFLAGS	=	-Wall -Wextra -Werror
-CXXOPTIONS	=	-O2
+CXX			=	clang++ -std=c++98
+CXXFLAGS	=	-Wall -Wextra -Werror -D__DEBUG
+CXXOPTIONS	=	-O3
 CC			=	CC
 # --------------------------------- submodules ---------------------------------
 WEBCORE_DIR	=	webcore
@@ -27,18 +27,19 @@ SCRS_DIR	=	src
 DEPS_DIR	=	dep
 # ------------------------------- project sorces -------------------------------
 SRCS		=	\
-				IRCParser			\
-				Mutex				\
-				Socket				\
-				Channel				\
-				IRCParser_compose	\
-				server_utils		\
-				IRCcodes			\
-				Database			\
-				User				\
-				IRCException		\
-				main				\
-				Server
+				IRCParser				\
+				IRCParser_dcc_compose	\
+				Exception				\
+				Channel					\
+				IRCParser_compose		\
+				server_utils			\
+				IRCcodes				\
+				Color					\
+				IRCParser_exec			\
+				Database				\
+				IRCParser_parse			\
+				User					\
+				main
 
 # ======================= UNCHANGEABLE PART OF MAKEFILE ========================
 # ------------------------------------------------------------------------------
@@ -56,10 +57,11 @@ R			=	\e[1;91m
 C			=	\e[1;96m
 P			=	\e[1;95m
 S			=	\e[0m
-SPACE		=	                      
+SPACE		=	\t                     \t
 
 # ------------------------------------------------------------------------------
 all:			${OBJS_DIR} ${DEPS_DIR}
+	@$(MAKE)	-C ${WEBCORE_DIR}
 	@$(MAKE)	$(NAME)
 	@printf		"$(G)OK$(S)                                                  \n"
 
@@ -71,27 +73,35 @@ $(NAME):		${OBJS}
 -include ${DEPS}
 
 # ------------------------------------------------------------------------------
-${OBJS_DIR}/%.o: ${SCRS_DIR}/%.cpp 
+${OBJS_DIR}/%.o: ${SCRS_DIR}/%.cpp Makefile
 	@printf		"$(G)[${CC}]$(W)\t\tBuilding CXX object $(Y)$<$(S)$(SPACE)\r"
 	@${CXX}		${CXXFLAGS} ${CXXOPTIONS} -c -MMD -MT $@ -o $@ $< ${INCLUDE}
 	@mv			${@:.o=.d} ${DEPS_DIR}
 
 # ------------------------------------------------------------------------------
 install:
+	@printf		"$(R)[RM]$(W)\t\t${WEBCORE_DIR}/${INCLUDE_DIR}/Exception.hpp\n"
+	@${RM}		${WEBCORE_DIR}/${INCLUDE_DIR}/Exception.hpp
 	@printf		"$(C)[LN]$(W)\t\t${WEBCORE_DIR}/${INCLUDE_DIR}/*.hpp\n"
 	@cd			inc && \
-	ln			-sf ../${WEBCORE_DIR}/${INCLUDE_DIR}/*.hpp .
+	 ln			-sf ../${WEBCORE_DIR}/${INCLUDE_DIR}/*.hpp .
 	@printf		"$(C)[LN]$(W)\t\t${WEBCORE_DIR}/lib${WEBCORE}\n"
 	@ln			-sf ${WEBCORE_DIR}/${WEBCORE} ${WEBCORE}
-
+	@printf		"$(C)[LN]$(W)\t\t${INCLUDE_DIR}/Exception.hpp "
+	@printf		"${WEBCORE_DIR}/${INCLUDE_DIR}/Exception.hpp\n"
+	@cd			${WEBCORE_DIR}/${INCLUDE_DIR} && \
+	 ln			-sf ../../${INCLUDE_DIR}/Exception.hpp .
 
 # ------------------------------------------------------------------------------
 clean:
+	@$(MAKE)	-C ${WEBCORE_DIR} clean
 	@printf		"$(R)[RM]$(W)\t\t${OBJS} ${DEPS}$(S)$(SPACE)\n"
 	@${RM}		${OBJS} ${DEPS}
 
 # ------------------------------------------------------------------------------
 fclean:			clean
+	@$(MAKE)	-C ${WEBCORE_DIR} fclean
+	@printf		"$(R)[RM]$(W)\t\t${LIBRARY}\n"
 	@printf		"$(R)[RM]$(W)\t\t${NAME}\n"
 	@${RM}		${NAME}
 

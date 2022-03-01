@@ -15,8 +15,6 @@
 void
 tlucanti::IRCParser::parse()
 {
-	typedef const char *fmt_t[];
-
 	// reformat this function and remove if/else
 	std::transform(command.begin(), command.end(), command.begin(), ::toupper);
 

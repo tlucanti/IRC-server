@@ -25,6 +25,7 @@ namespace tlucanti
 				: _message(response) {}
 		IRCParserException() __DEFAULT
 		__WUR const char *what() const noexcept override { return _message.c_str(); }
+		~IRCParserException() noexcept override {}
 
 	private:
 		std::string _message;

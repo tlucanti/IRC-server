@@ -1,9 +1,27 @@
 
-SRCS =	test.cpp					\
-		src/IRCParserBot.cpp		\
-		../src/IRCParser.cpp		\
-		../src/IRCParser_parse.cpp	\
-		../src/IRCException.cpp
+NAME		= bot
+SRCS		= main.cpp	 \
+			  Bot.cpp \
+			  User.cpp \
+			  Message.cpp 
 
-all:
-	g++ -D__BOT -std=c++2a -Wall -Wextra ${SRCS} -I../inc -o test
+OBJS		= $(SRCS:.cpp=.o)
+CC			= c++ -Wall -Wextra -Werror -std=c++2a
+
+all: $(NAME)
+
+$(NAME): $(OBJS)
+	$(CC) $(OBJS) -o $(NAME)
+
+$(OBJS): %.o : %.cpp
+	$(CC) -c $< -o $@
+
+clean:
+	rm -rf $(OBJS)
+
+fclean: clean
+	rm -rf $(NAME)
+
+re: fclean all
+
+.PHONY: all re clean

@@ -31,10 +31,10 @@ namespace tlucanti
 
 	 protected:
 		ITarget() __DEFAULT
+		virtual ~ITarget() __DEFAULT
 
 	__DELETED_MEMBERS:
 		ITarget(const ITarget &) __DELETE
-		virtual ~ITarget() __DEFAULT
 		ITarget &operator =(const ITarget &) __DELETE
 	};
 

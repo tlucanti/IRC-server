@@ -12,10 +12,10 @@
 
 #include "../inc/IRCParser.hpp"
 
-const char *tlucanti::IRCParser::PRINTABLE = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+-./:;<=>?@[\]^_`{|}~)";
-const char *tlucanti::IRCParser::PRINTABLESPACE = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+-./:;<=>?@[\]^_`{|}~ )";
+const char *tlucanti::IRCParser::PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+-./:;<=>?@[\\]^_`{|}~";
+const char *tlucanti::IRCParser::PRINTABLESPACE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+-./:;<=>?@[\\]^_`{|}~ ";
 const char *tlucanti::IRCParser::ALNUM = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const char *tlucanti::IRCParser::NICKNAME = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-+=^[](){})";
+const char *tlucanti::IRCParser::NICKNAME = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-+=^[](){}";
 
 namespace tlucanti {
 	extern Database database;
@@ -31,11 +31,11 @@ tlucanti::IRCParser::IRCParser(const std::string &raw_command) :
 		channel("UNINITIALIZED_CHANNEL"),
 		mode("UNINITIALIZED_MODESTRING"),
 		target("UNINITIALIZED_TARGET"),
-		_raw_command(raw_command),
 		has_suffix(false),
 		has_preffix(false),
+		dcc(false),
 		user(nullptr),
-		dcc(false) {}
+		_raw_command(raw_command) {}
 
 void
 tlucanti::IRCParser::init()

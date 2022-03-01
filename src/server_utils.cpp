@@ -65,6 +65,8 @@ namespace tlucanti
 #ifdef __DEBUG
 					tlucanti::cout << exc.what() << tlucanti::endl;
 #endif /* __DEBUG */
+					User *usr = database[client];
+					usr->send_to_channels(IRC::compose_message(usr->compose(), "QUIT", nullptr, "Lost connection"));
 					database.remove_client(client);
 				}
 				if (request.back() != '\n' and request.back() != '\r')
@@ -93,10 +95,6 @@ namespace tlucanti
 //#endif /* __DEBUG */
 				}
 			}
-			catch (IRCException &exc)
-			{
-				tlucanti::cout << exc.what() << "\n";
-			}
 			catch (Exception &exc)
 			{
 				tlucanti::cout << exc.what() << "\n";
@@ -109,12 +107,18 @@ namespace tlucanti
 		while (not tlucanti::server_int)
 		{
 			Database::invite_table_type::iterator it = database.invite_table.begin();
-			for (; it != database.invite_table.end(); ++it)
+			for (; it != database.invite_table.end(); )
 			{
-				if (time(nullptr) > it->expire)
-					database.remove_invite(*it);
+				if (time(nullptr) > it->second)
+				{
+					Database::invite_table_type::iterator next = it;
+					++next;
+					database.remove_invite(it->first);
+					it = next;
+				}
+				else
+					++it;
 			}
-
 			sleep(1);
 		}
 		return nullptr;
@@ -122,7 +126,6 @@ namespace tlucanti
 
 	void *ping_thread(void *)
 	{
-		typedef unsigned long long ull;
 		int wait = 0;
 		while (not tlucanti::server_int)
 		{
@@ -140,8 +143,8 @@ namespace tlucanti
 					user->do_ping();
 				else if (user->ping_waiting and time(nullptr) > user->last_ping + tlucanti::ping_expiration)
 				{
-					std::string message = "Ping timeout: " + numeric_cast<std::string>(255) + " seconds";
-					user->send_to_channels(IRC::compose_message(user->compose(), "QUIT", "", message));
+					std::string message = "Ping timeout: " + numeric_cast<std::string, 10, true>(255) + " seconds";
+					user->send_to_channels(IRC::compose_message(user->compose(), "QUIT", nullptr, message));
 					user->send_message(IRC::ERROR(message));
 					database.remove_client(*(it->second));
 				}

@@ -80,7 +80,7 @@ tlucanti::Database::make_edge(const std::string &nickname, const Socket &sock)
 {
 	if (str_access.find(nickname) != str_access.end())
 		return true;
-	str_access.insert({nickname, sock_access[sock.get_sock()]});
+	str_access.insert(std::pair<std::string, User *>(nickname, sock_access[sock.get_sock()]));
 	return false;
 }
 
@@ -94,9 +94,7 @@ void
 tlucanti::Database::make_invite(const User &user, const Channel &channel)
 {
 	invite_mutex.lock();
-	time_t expiration = time(nullptr) + tlucanti::invite_expiration;
-	InviteNode invitation = InviteNode(&user, &channel, expiration);
-	invite_table.insert(invitation);
+	invite_table[user.get_name() + channel.get_name()] = time(nullptr) + tlucanti::invite_expiration;
 	invite_mutex.unlock();
 }
 
@@ -104,15 +102,12 @@ void
 tlucanti::Database::remove_invite(const User &user, const Channel &channel)
 {
 	invite_mutex.lock();
-	InviteNode invitation = InviteNode(&user, &channel, 0);
-	invite_table_type::iterator inv = invite_table.find(invitation);
-	if (inv != invite_table.end())
-		invite_table.erase(inv);
+	invite_table.erase(user.get_name() + channel.get_name());
 	invite_mutex.unlock();
 }
 
 void
-tlucanti::Database::remove_invite(const InviteNode &inv)
+tlucanti::Database::remove_invite(const std::string &inv)
 {
 	invite_mutex.lock();
 	invite_table.erase(inv);
@@ -124,8 +119,7 @@ bool
 tlucanti::Database::has_invite(const User &user, const Channel &channel)
 {
 	invite_mutex.lock();
-	InviteNode invitation = InviteNode(&user, &channel, 0);
-	bool ret = invite_table.find(invitation) != invite_table.end();
+	bool ret = invite_table.find(user.get_name() + channel.get_name()) != invite_table.end();
 	invite_mutex.unlock();
 	return ret;
 }

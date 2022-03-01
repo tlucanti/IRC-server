@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/08 11:05:01 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/24 20:33:17 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/03/01 17:19:37 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,24 +23,26 @@
 
 std::string get_current_time();
 
-namespace tlucanti::IRC
-{
+namespace tlucanti {
+namespace IRC {
 	template <typename from_T, typename to_T>
 	__WUR inline
 	std::string
 	compose_message(const from_T &from, const char *command,
 		const to_T &to, const std::string &message, bool colon=true)
 	/*
-		:`FROM` `COMMAND` `TO`z :`MESSAGE`
+		:`FROM` `COMMAND` `TO` :`MESSAGE`
 	*/
 	{
 		std::stringstream ss;
 		ss << ':';
-		if (tlucanti::isinstance<std::nullptr_t>(from))
+		if (tlucanti::is_same<from_T, std::nullptr_t>::value)
 			ss << tlucanti::server_name;
 		else
 			ss << from;
-		ss << ' ' << command << ' ' << to << ' ';
+		ss << ' ' << command << ' ';
+		if (not tlucanti::is_same<to_T, std::nullptr_t>::value)
+			ss << to << ' ';
 		if (colon)
 			ss << ':';
 		ss << message << IRC::endl;
@@ -408,7 +410,7 @@ namespace tlucanti::IRC
 	{
 		std::stringstream ss;
 		ss << ':' << tlucanti::server_name << ' ' << IRCcodes::RPL_LISTEND <<
-			" :End of /LIST" << IRC::endl;
+			' ' << target << " :End of /LIST" << IRC::endl;
 		return ss.str();
 	}
 
@@ -1257,12 +1259,13 @@ namespace tlucanti::IRC
 			IRC::endl;
 		return ss.str();
 	}
-}
+} /* IRC */
+} /* tlucanti */
 
 # else /* defined __BOT */
 
-namespace tlucanti::IRC
-{
+namespace tlucanti {
+namespace IRC {
 	template <typename T>
 	inline std::string ERR_NEEDMOREPARAMS(__UNUSED const T&, __UNUSED std::string &, __UNUSED const std::string &) { return "need more params"; }
 	template <typename T>
@@ -1277,7 +1280,8 @@ namespace tlucanti::IRC
 	inline std::string ERR_UNKNOWNCOMMAND(__UNUSED const T&, __UNUSED const std::string &) { return "unknown command"; }
 	template <typename T, typename TT>
 	inline std::string compose_message(__UNUSED const T&, __UNUSED const char *, __UNUSED const TT &, const std::string &_m, __UNUSED bool=false) { return _m; }
-}
+} /* IRC */
+} /* tlucanti */
 
 # endif /* __BOT */
 

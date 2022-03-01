@@ -15,8 +15,8 @@
 
 typedef unsigned short irc_code_t;
 
-namespace tlucanti::IRCcodes
-{
+namespace tlucanti {
+namespace IRCcodes {
 	extern irc_code_t RPL_WELCOME;
 	extern irc_code_t RPL_YOURHOST;
 	extern irc_code_t RPL_CREATED;
@@ -179,6 +179,7 @@ namespace tlucanti::IRCcodes
 	extern irc_code_t ERR_SASLABORTED;
 	extern irc_code_t ERR_SASLALREADY;
 	extern irc_code_t RPL_SASLMECHS;
-}
+} /* IRCcodes */
+} /* tlucanti */
 
 #endif /* IRC_CODES_H */

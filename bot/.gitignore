@@ -1,1 +1,7 @@
-test
+.idea
+cmake-build-debug
+bot
+Bot.o
+Message.o
+User.o
+main.o

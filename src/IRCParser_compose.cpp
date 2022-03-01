@@ -55,7 +55,7 @@ tlucanti::IRCParser::compose_nick() const
 		database.remove_edge(user->get_name());
 		std::string old = user->compose();
 		user->make_nickname(nickname);
-		user->send_to_channels(IRC::compose_message(old, "NICK", "", nickname));
+		user->send_to_channels(IRC::compose_message(old, "NICK", nullptr, nickname));
 	}
 	else
 		user->make_nickname(nickname);
@@ -137,7 +137,7 @@ tlucanti::IRCParser::compose_quit()
 {
 	if (message.empty())
 		message = "Client Quit";
-	user->send_to_channels(IRC::compose_message(user->compose(), "QUIT", "", message));
+	user->send_to_channels(IRC::compose_message(user->compose(), "QUIT", nullptr, message));
 	user->send_message(IRC::ERROR(message));
 	database.remove_client(*user);
 	return "";
@@ -195,7 +195,7 @@ tlucanti::IRCParser::compose_join()
 		chan->add_user(*user);
 		user->add_channel(*chan);
 
-		chan->send_message(IRC::compose_message(user->compose(), "JOIN", "", chan->get_name(), false));
+		chan->send_message(IRC::compose_message(user->compose(), "JOIN", nullptr, chan->get_name(), false));
 		channel = chan->get_name();
 		user->send_message(compose_topic());
 
@@ -435,7 +435,11 @@ tlucanti::IRCParser::compose_motd() const
 {
 	user->assert_mode("reg+");
 	user->send_message(IRC::RPL_MOTDSTART(*user));
+#ifdef __CMAKE
 	user->send_message(IRC::RPL_MOTD(*user, "../MOTD.txt"));
+#else /* not __CMAKE */
+	user->send_message(IRC::RPL_MOTD(*user, "MOTD.txt"));
+#endif /* __CMAKE */
 	user->send_message(IRC::RPL_ENDOFMOTD(*user));
 	return "";
 }
@@ -480,7 +484,7 @@ tlucanti::IRCParser::compose_help()
 		recipient = user->get_name();
 	const char *fname = "../README.md";
 	{
-		struct stat buffer {};
+		struct stat buffer = {};
 		if (stat(fname, &buffer))
 			return IRC::ERR_HELPNOTFOUND(recipient, "*");
 	}
@@ -529,7 +533,7 @@ tlucanti::IRCParser::compose_mode()
 		}
 		message = "";
 		has_suffix = 1;
-		if (mode == "+l" or mode == "+k" or mode.at(1) == 'v' or mode.at(1) == 'o' or mode.at(1) == 'b')
+		if (mode == "+l" or mode == "+k" or mode.at(1) == 'v' or mode.at(1) == 'o' or mode == "+b" or mode == "+e")
 		{
 			if (arg_i != modes_list.end())
 			{
@@ -618,7 +622,7 @@ tlucanti::IRCParser::compose_mode_single()
 				return IRC::ERR_NEEDMOREPARAMS(*user, "MODE", "expected channel limit");
 			unsigned int n;
 			try {
-				n = lexical_cast<int>(message);
+				n = lexical_cast<int, 10>(message);
 				if (n <= 0 or n > 500)
 					return IRC::ERR_INVALIDMODEPARAM(*user, *chan, mode.at(0), message, "limit value should be in range [1:500]");
 			} catch (tlucanti::bad_lexical_cast &) {
@@ -633,7 +637,17 @@ tlucanti::IRCParser::compose_mode_single()
 			chan->make_pass(message);
 			chan->make_mode("k+");
 		}
-		else if (mode == "v+" or mode == "o+" or mode == "v-" or mode == "o-" or mode == "b+" or mode == "b-")
+		else if (mode == "e+")
+		{
+			if (has_suffix == 1)
+				return IRC::ERR_NEEDMOREPARAMS(*user, "MODE", "expected username");
+			User *pardon = database[message];
+			if (pardon == nullptr)
+				return IRC::ERR_NOSUCHNICK(*user, message, "user with nickname");
+			chan->remove_ban(*pardon);
+
+		}
+		else if (mode == "v+" or mode == "o+" or mode == "v-" or mode == "o-" or mode == "b+")
 		{
 			if (has_suffix == 1)
 				return IRC::ERR_NEEDMOREPARAMS(*user, "MODE", "expected username");
@@ -660,8 +674,6 @@ tlucanti::IRCParser::compose_mode_single()
 				chan->remove_voice(*recipient);
 				chan->remove_oper(*recipient);
 			}
-			else if (mode == "b-")
-				chan->remove_ban(*recipient);
 			else if (mode == "v-")
 			{
 				if (not chan->is_voice(*recipient))
@@ -713,7 +725,7 @@ tlucanti::IRCParser::compose_msg(const char *type)
 		if (not response.empty())
 			user->send_message(response);
 	}
-	return "";
+	return "OK";
 }
 
 __WUR
@@ -856,7 +868,7 @@ tlucanti::IRCParser::compose_restart() const
 		"WARNING! SERVER RESTARTING"));
 	server_int = 'r';
 	database.collapse();
-	throw IRCException("server", "called restart command");
+	throw Exception("server", "called restart command");
 }
 
 __WUR
@@ -870,5 +882,5 @@ tlucanti::IRCParser::compose_squit() const
 		"WARNING! SERVER SHUTTING DOWN"));
 	server_int = 'q';
 	database.collapse();
-	throw IRCException("server", "called squit command");
+	throw Exception("server", "called squit command");
 }

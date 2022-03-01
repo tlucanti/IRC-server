@@ -1,18 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   IRCException.cpp                                   :+:      :+:    :+:   */
+/*   Exception.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/04 14:00:46 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/06 17:43:45 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/02/28 17:00:43 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/IRCException.hpp"
+#include "../inc/Exception.hpp"
 
-tlucanti::IRCException::IRCException(const char *func, int line, const char *message, const std::string &arg)
+tlucanti::Exception::Exception(const char *func, int line, const char *message, const std::string &arg)
 {
 	std::stringstream ss;
 	_message = func;
@@ -22,44 +22,41 @@ tlucanti::IRCException::IRCException(const char *func, int line, const char *mes
 		--it;
 	_message.erase(_message.begin(), ++it);
 	ss << "[r][FAIL][w] [" << _message << "::" << line << "][] " << message <<
-		": [y]" << arg << total_errors() << "[]";
+		": [y]" << arg << ' ' << total_errors() << "[]";
 	_message = ss.str();
 }
 
-tlucanti::IRCException::IRCException(const std::string &parent,
+tlucanti::Exception::Exception(const std::string &parent,
 	const std::string &message, int error)
-		: _parent(parent)
 {
 	_message = message;
-	_message = "[r][FAIL][w] " + _parent + ":[] " + _message + ": [y]" +
-		strerror(error) + total_errors() + "[]";
+	_message = "[r][FAIL][w] " + parent + ":[] " + _message + ": [y]" +
+		strerror(error) + ' ' + total_errors() + "[]";
 }
 
-tlucanti::IRCException::IRCException(const std::string &parent,
+tlucanti::Exception::Exception(const std::string &parent,
 	const std::string &message)
-		: _parent(parent)
 {
 	_message = message;
-	_message = "[r][FAIL][w] " + _parent + ":[] " + _message + total_errors() + "[]";
+	_message = "[r][FAIL][w] " + parent + ":[] " + _message + ' ' + total_errors() + "[]";
 }
 
-tlucanti::IRCException::IRCException(const std::string &parnet,
+tlucanti::Exception::Exception(const std::string &parent,
 	const std::string &message, const std::string &error)
-		: _parent(parnet)
 {
 	_message = message;
-	_message = "[r][FAIL][w] " + _parent + ":[] " + _message + ": [y]" +
-		error + total_errors() + "[]";
+	_message = "[r][FAIL][w] " + parent + ":[] " + _message + ": [y]" +
+		error + ' ' + total_errors() + "[]";
 }
 
 const char *
-tlucanti::IRCException::what() const noexcept
+tlucanti::Exception::what() const noexcept
 {
 	return _message.c_str();
 }
 
 std::string
-tlucanti::IRCException::total_errors() const
+tlucanti::Exception::total_errors() const
 {
 	static int total_errors = 0;
 
@@ -67,3 +64,4 @@ tlucanti::IRCException::total_errors() const
 	ss << "[p](total errors: " << ++total_errors << ")[]";
 	return ss.str();
 }
+

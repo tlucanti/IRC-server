@@ -6,7 +6,7 @@
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/19 17:09:44 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/02/20 18:06:26 by tlucanti         ###   ########.fr       */
+/*   Updated: 2022/03/01 17:26:54 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,13 @@
 # define _NAMESPACE_END		} /* tlucanti */
 
 # ifndef ULONG_LONG_MAX
-#  define ULONG_LONG_MAX ((unsigned long long)(-1))
+#  define ULONG_LONG_MAX 18446744073709551615ULL
 # endif
 # ifndef LONG_LONG_MAX
-#  define LONG_LONG_MAX (ULONG_LONG_MAX / 2)
+#  define LONG_LONG_MAX 9223372036854775807LL
 # endif
 # ifndef LONG_LONG_MIN
-#  define LONG_LONG_MIN (LONG_LONG_MAX + 1)
+#  define LONG_LONG_MIN -9223372036854775807LL
 # endif
 
 # define __INT_STR(__x) #__x
@@ -44,6 +44,8 @@ _NAMESPACE_START
 
 		__WUR inline const char *what() const noexcept override
 		{ return _message.c_str(); }
+
+		~bad_lexical_cast() noexcept override {}
 
 	protected:
 		std::string _message;
@@ -102,7 +104,7 @@ _NAMESPACE_START
 
 	__WUR inline
 	long long int
-	s2ll(const char *str, lexical_cast_errors *error_ptr, int base)
+	s2ll(const char *str, lexical_cast_errors *error_ptr, unsigned int base)
 	/*
 		string to integer converter
 	*/
@@ -151,7 +153,7 @@ _NAMESPACE_START
 
 	__WUR inline
 	unsigned long long int
-	s2ull(const char *str, lexical_cast_errors *error_ptr, int base)
+	s2ull(const char *str, lexical_cast_errors *error_ptr, unsigned int base)
 	/*
 		string to unsigned integer converter
 	*/
@@ -205,7 +207,7 @@ _NAMESPACE_START
 	}
 
 
-	template <typename target_T, int base=10, typename source_T>
+	template <typename target_T, int base, typename source_T>
 	__WUR inline
 	target_T
 	lexical_cast(const source_T &_source, bool no_overflow=false)
@@ -329,10 +331,10 @@ _NAMESPACE_START
 		return ull2s(val, dest, base, upper);
 	}
 
-	template <typename target_T, int base=10, bool upper=true, typename source_T>
+	template <typename target_T, int base, bool upper, typename source_T>
 	__WUR inline
 	target_T
-	numeric_cast(const source_T &source, bool no_overflow=false)
+	numeric_cast(const source_T &source)
 	/*
 		convert from string to integer
 	*/

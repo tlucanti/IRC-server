@@ -16,7 +16,7 @@ const char *tlucanti::User::modes = "rio";
 
 tlucanti::User::User(const Socket &_sock) noexcept :
 		sock(_sock),
-		_modes {},
+		_modes(),
 		last_ping(0),
 		ping_waiting(false),
 		register_waiting(false)

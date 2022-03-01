@@ -66,7 +66,7 @@ get_current_time()
 	bzero(buf, sizeof(buf));
 	strftime(buf, sizeof(buf) / sizeof(char), "%m", &tstruct);
 	ret += ' ';
-	ret += month[tlucanti::lexical_cast<int>(buf)];
+	ret += month[tlucanti::lexical_cast<int, 10>(buf)];
 	bzero(buf, sizeof(buf));
 	strftime(buf, sizeof(buf) / sizeof(char), "%d", &tstruct);
 	ret += ' ';
@@ -88,23 +88,23 @@ void check_args(int argc, const char *const *argv)
 	{
 		tlucanti::cout << "[b][INFO] [p]c++[w] irc webserver[]\n";
 		tlucanti::cout << "[p] usage:[c] ./ircserv [y]PORT PASSWORD[]\n";
-		throw tlucanti::IRCException("server", "restart server with arguments");
+		throw tlucanti::Exception("server", "restart server with arguments");
 	}
 	else if (argc < 3)
-		throw tlucanti::IRCException("server", "need more arguments",
+		throw tlucanti::Exception("server", "need more arguments",
 			"type --help for more information");
 	else if (argc > 3)
-		throw tlucanti::IRCException("server", "too many arguments",
+		throw tlucanti::Exception("server", "too many arguments",
 			"type --help for more information");
 	else
 	{
 		tlucanti::server_password = argv[2];
 		tlucanti::server_begining = get_current_time();
 		try {
-			tlucanti::server_port = tlucanti::lexical_cast<unsigned short>(argv[1]);
+			tlucanti::server_port = tlucanti::lexical_cast<unsigned short, 10>(argv[1]);
 		} catch(tlucanti::bad_lexical_cast &exc)
 		{
-			throw tlucanti::IRCException("lexical_cast", exc.what());
+			throw tlucanti::Exception("lexical_cast", exc.what());
 		}
 		tlucanti::server_int = 0;
 	}
@@ -128,11 +128,16 @@ void check_args(int argc, const char *const *argv)
 
 int main(int argc, char *const *argv)
 {
+	try {
+		check_args(argc, argv);
+	} catch (std::exception &exc) {
+		tlucanti::cout << exc.what() << tlucanti::endl;
+		return 1;
+	}
 #ifndef __DEBUG
 	try
 	{
 #endif /* __DEBUG */
-		check_args(argc, argv);
 		tlucanti::Server server(tlucanti::server_address, tlucanti::server_port);
 		tlucanti::cout << "[w]server started at address: [" << tlucanti::server_address << "/" << argv[1] << "][]\n";
 		tlucanti::server_start(server);

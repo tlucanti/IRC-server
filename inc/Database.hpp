@@ -21,7 +21,6 @@
 # include "User.hpp"
 # include "Channel.hpp"
 # include "Socket.hpp"
-# include "InviteNode.hpp"
 # include "Mutex.hpp"
 
 namespace tlucanti
@@ -31,9 +30,9 @@ namespace tlucanti
 	public:
 		typedef std::unordered_map<std::string, Channel *>
 				channel_container_type;
-		typedef std::set<InviteNode> invite_table_type;
+		typedef std::unordered_map<std::string, time_t> invite_table_type;
 
-		Database() noexcept : invisible_users(0), operators_cnt(0) {}
+		Database() noexcept : invisible_users(0), operators_cnt(0), max_users(500) {}
 		~Database();
 		void collapse();
 
@@ -45,7 +44,7 @@ namespace tlucanti
 		void remove_edge(const std::string &nickname);
 		void make_invite(const User &user, const Channel &channel);
 		void remove_invite(const User &user, const Channel &channel);
-		void remove_invite(const InviteNode &inv);
+		void remove_invite(const std::string &inv);
 		__WUR bool has_invite(const User &user, const Channel &channel);
 
 		void send_to_all(const std::string &message) const;
@@ -60,7 +59,7 @@ namespace tlucanti
 
 		int invisible_users;
 		int operators_cnt;
-		const int max_users = 500;
+		const int max_users;
 	private:
 		typedef	std::unordered_map<int, User *>			sock_hashmap_type;
 		typedef	std::unordered_map<std::string, User *>	string_hashmap_type;

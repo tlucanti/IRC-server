@@ -16,9 +16,9 @@ const char *tlucanti::Channel::modes = "likmstn";
 
 tlucanti::Channel::Channel(const std::string &name) :
 		name(name),
-		max_users(tlucanti::channel_max_users),
 		topic_time(0),
-		_modes {}
+		max_users(tlucanti::channel_max_users),
+		_modes()
 {
 	create_time = time(nullptr);
 	_modes.limit = true;

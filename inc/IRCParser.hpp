@@ -25,7 +25,7 @@
 # include "IRCcodes.h"
 # include "Database.hpp"
 # include "IRCParserException.hpp"
-# include "IRCException.hpp"
+# include "Exception.hpp"
 # include "parser_utils.hpp"
 # include "IRCrpl.hpp"
 
@@ -116,7 +116,7 @@ namespace tlucanti
 		__WUR std::string compose_restart() const;
 		__WUR std::string compose_squit() const;
 
-		__WUR std::string compose_dcc(const std::string &message);
+		__WUR std::string compose_dcc(__UNUSED const std::string &message);
 
 		std::vector<std::string> &split_string(const std::string &str, arg_list_type &out);
 		void check_format_single(const std::string &arg, const std::string &format);
