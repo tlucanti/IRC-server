@@ -15,6 +15,7 @@
 
 # include <string>
 # include <climits>
+# include <cassert>
 # include "defs.h"
 
 # define _NAMESPACE_START	namespace tlucanti {

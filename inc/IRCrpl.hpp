@@ -25,6 +25,39 @@ std::string get_current_time();
 
 namespace tlucanti {
 namespace IRC {
+
+    template <typename from_T>
+    inline std::string
+    compose_message(const from_T, const char *command,
+        const std::nullptr_t &, const std::string &message, bool colon=true)
+    {
+		std::stringstream ss;
+		ss << ':';
+		ss << tlucanti::server_name;
+		ss << ' ' << command << ' ';
+		if (colon)
+			ss << ':';
+		ss << message << IRC::endl;
+		return ss.str();
+    }
+
+
+    template <typename to_T>
+    inline std::string
+    compose_message(const std::nullptr_t &, const char *command,
+        const to_T &to, const std::string &message, bool colon=true)
+    {
+		std::stringstream ss;
+		ss << ':';
+		ss << tlucanti::server_name;
+		ss << ' ' << command << ' ';
+		ss << to << ' ';
+		if (colon)
+			ss << ':';
+		ss << message << IRC::endl;
+		return ss.str();
+    }
+
 	template <typename from_T, typename to_T>
 	__WUR inline
 	std::string
@@ -36,13 +69,9 @@ namespace IRC {
 	{
 		std::stringstream ss;
 		ss << ':';
-		if (tlucanti::is_same<from_T, std::nullptr_t>::value)
-			ss << tlucanti::server_name;
-		else
-			ss << from;
+		ss << from;
 		ss << ' ' << command << ' ';
-		if (not tlucanti::is_same<to_T, std::nullptr_t>::value)
-			ss << to << ' ';
+		ss << to << ' ';
 		if (colon)
 			ss << ':';
 		ss << message << IRC::endl;

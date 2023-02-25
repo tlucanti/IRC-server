@@ -174,7 +174,7 @@ tlucanti::IRCParser::compose_join()
 		{
 			user->send_message(IRC::ERR_BANNEDFROMCHAN(*user, *chan));
 			continue ;
-		}	
+		}
 		if (chan->has_mode("i+") and not database.has_invite(*user, *chan)) // invite only channel
 		{
 			user->send_message(IRC::ERR_INVITEONLYCHAN(*user, *chan));
@@ -482,7 +482,7 @@ tlucanti::IRCParser::compose_help()
 	std::string recipient = "*";
 	if (user->has_mode("nick+"))
 		recipient = user->get_name();
-	const char *fname = "../README.md";
+	const char *fname = "./README.md";
 	{
 		struct stat buffer = {};
 		if (stat(fname, &buffer))

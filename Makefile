@@ -56,8 +56,10 @@ Y			= 	\e[1;93m
 R			=	\e[1;91m
 C			=	\e[1;96m
 P			=	\e[1;95m
+B			=	\e[1;34m
 S			=	\e[0m
-SPACE		=	\t                     \t
+
+# ]]]]]]]]
 
 # ------------------------------------------------------------------------------
 all:			${OBJS_DIR} ${DEPS_DIR}
@@ -67,14 +69,15 @@ all:			${OBJS_DIR} ${DEPS_DIR}
 
 # ------------------------------------------------------------------------------
 $(NAME):		${OBJS}
-	@echo [LD] Linking CXX Executable ${NAME}
+	@printf 	"$(C)[LD] $(W)Linking CXX Executable ${NAME}                 \n"
 	@${CXX}		-o ${NAME} ${CXXFLAGS} ${CXXOPTIONS} ${OBJS} ${LIBRARY}
 
 -include ${DEPS}
 
 # ------------------------------------------------------------------------------
 ${OBJS_DIR}/%.o: ${SCRS_DIR}/%.cpp Makefile
-	@printf		"$(G)[${CC}]$(W)\t\tBuilding CXX object $(Y)$<$(S)$(SPACE)\r"
+	@printf		"$(G)[${CC}]$(W)\t\tBuilding CXX object $(Y)$<$(S)"
+	@printf		"                          \r"
 	@${CXX}		${CXXFLAGS} ${CXXOPTIONS} -c -MMD -MT $@ -o $@ $< ${INCLUDE}
 	@mv			${@:.o=.d} ${DEPS_DIR}
 
@@ -82,12 +85,12 @@ ${OBJS_DIR}/%.o: ${SCRS_DIR}/%.cpp Makefile
 install:
 	@printf		"$(R)[RM]$(W)\t\t${WEBCORE_DIR}/${INCLUDE_DIR}/Exception.hpp\n"
 	@${RM}		${WEBCORE_DIR}/${INCLUDE_DIR}/Exception.hpp
-	@printf		"$(C)[LN]$(W)\t\t${WEBCORE_DIR}/${INCLUDE_DIR}/*.hpp\n"
+	@printf		"$(B)[LN]$(W)\t\t${WEBCORE_DIR}/${INCLUDE_DIR}/*.hpp\n"
 	@cd			inc && \
 	 ln			-sf ../${WEBCORE_DIR}/${INCLUDE_DIR}/*.hpp .
-	@printf		"$(C)[LN]$(W)\t\t${WEBCORE_DIR}/lib${WEBCORE}\n"
+	@printf		"$(B)[LN]$(W)\t\t${WEBCORE_DIR}/lib${WEBCORE}\n"
 	@ln			-sf ${WEBCORE_DIR}/${WEBCORE} ${WEBCORE}
-	@printf		"$(C)[LN]$(W)\t\t${INCLUDE_DIR}/Exception.hpp "
+	@printf		"$(B)[LN]$(W)\t\t${INCLUDE_DIR}/Exception.hpp "
 	@printf		"${WEBCORE_DIR}/${INCLUDE_DIR}/Exception.hpp\n"
 	@cd			${WEBCORE_DIR}/${INCLUDE_DIR} && \
 	 ln			-sf ../../${INCLUDE_DIR}/Exception.hpp .
@@ -95,7 +98,7 @@ install:
 # ------------------------------------------------------------------------------
 clean:
 	@$(MAKE)	-C ${WEBCORE_DIR} clean
-	@printf		"$(R)[RM]$(W)\t\t${OBJS} ${DEPS}$(S)$(SPACE)\n"
+	@printf		"$(R)[RM]$(W)\t\t${OBJS} ${DEPS}$(S)                         \n"
 	@${RM}		${OBJS} ${DEPS}
 
 # ------------------------------------------------------------------------------
@@ -138,12 +141,12 @@ compile:
 
 # ------------------------------------------------------------------------------
 ${OBJS_DIR}:
-	@printf		"$(P)[MK]\t$(Y)${OBJS_DIR}$(S)$(SPACE)\n"
+	@printf		"$(P)[MK]\t$(Y)${OBJS_DIR}$(S)                               \n"
 	@mkdir		-p ${OBJS_DIR}
 
 # ------------------------------------------------------------------------------
 ${DEPS_DIR}:
-	@printf		"$(P)[MK]\t$(Y)${DEPS_DIR}$(S)$(SPACE)\n"
+	@printf		"$(P)[MK]\t$(Y)${DEPS_DIR}$(S)                               \n"
 	mkdir		-p ${DEPS_DIR}
 
 # ------------------------------------------------------------------------------
